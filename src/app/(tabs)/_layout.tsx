@@ -16,6 +16,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="about" options={{ title: 'About', tabBarIcon: ({ color }) => <Ionicons name="information-circle" size={24} color={color} /> }} />
         <Tabs.Screen name="explore" options={{ title: 'Explore', tabBarIcon: ({ color }) => <Ionicons name="search" size={24} color={color} /> }} />
         <Tabs.Screen name="camera_test" options={{ title: 'Camera', tabBarIcon: ({ color }) => <Ionicons name="camera" size={24} color={color} /> }} />
+        <Tabs.Screen name="face_detect" options={{title: 'face', tabBarIcon: ({color}) => <Ionicons name="camera" size={24} color={color}/>}} />
     </Tabs>
 
   );
