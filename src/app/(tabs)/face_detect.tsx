@@ -29,9 +29,12 @@ import {
 } from 'react-native-vision-camera-face-detector'
 import Animated, {
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withTiming
 } from 'react-native-reanimated'
+
+import {Canvas, Points, vec} from '@shopify/react-native-skia'
 
 /**
  * Entry point component
@@ -108,10 +111,71 @@ function FaceDetection(): ReactNode {
   const aFaceH = useSharedValue( 0 )
   const aFaceX = useSharedValue( 0 )
   const aFaceY = useSharedValue( 0 )
-  const mouthRight = useSharedValue(0)
-  const mouthLeft = useSharedValue(0)
-  const mouthTop = useSharedValue(0)
-  const mouthBottom = useSharedValue(0)
+  const mouthW = useSharedValue(0)
+  const mouthH = useSharedValue(0)
+  const mouthX = useSharedValue(0)
+  const mouthY = useSharedValue(0)
+
+  const LipMeshPoints = useDerivedValue(()=>{
+    if (faces.value.length === 0) return [];
+
+    const contours = faces.value[0]?.contours;
+    if (!contours) return [];
+
+    const{
+      UPPER_LIP_TOP,
+      UPPER_LIP_BOTTOM,
+      LOWER_LIP_TOP,
+      LOWER_LIP_BOTTOM
+    } = contours as Record<string, {x:number; y:number}[]>;
+
+    if (UPPER_LIP_TOP?.length > 0 && LOWER_LIP_BOTTOM?.length > 0){
+      const allLipPoints = [
+        ...UPPER_LIP_TOP,
+        ...UPPER_LIP_BOTTOM,
+        ...LOWER_LIP_TOP,
+        ...LOWER_LIP_BOTTOM
+      ]
+      const SCALE_FACTOR = 1.6
+      const X_OFFSET = ((width * SCALE_FACTOR - width) / 2 )
+      // LIP BOX DRAWING
+
+      const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
+      const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
+
+      const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * SCALE_FACTOR)
+      const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2)
+
+
+
+      const LipNetWidth = 128
+      const LipNetHeight = 64
+
+      mouthW.value = LipNetHeight
+      mouthH.value = LipNetWidth
+      mouthX.value = LipCenterX - X_OFFSET - LipNetWidth/2
+      mouthY.value = LipCenterY - 40 - LipNetHeight/2
+
+
+      // LIP CONTOUR DRAWING
+
+
+
+
+
+
+
+      return allLipPoints.map(p=>{
+        const scaledX = p.x * SCALE_FACTOR
+        const centeredX = scaledX - X_OFFSET
+        return vec(centeredX, (p.y-40))
+      })
+    }    
+    return []
+  })
+
+
+
   const boundingBoxStyle = useAnimatedStyle( () => ( {
     position: 'absolute',
     borderWidth: 4,
@@ -128,7 +192,7 @@ function FaceDetection(): ReactNode {
     left: withTiming( aFaceX.value, {
       duration: 100
     } ),
-    top: withTiming( mouthRight.value, {
+    top: withTiming( aFaceY.value, {
       duration: 100
     } )
   } ) )
@@ -140,16 +204,16 @@ function FaceDetection(): ReactNode {
     borderRightColor: 'rgb(255, 0, 0)',
     borderBottomColor: 'rgb(255, 0, 0)',
     borderTopColor: 'rgb(255, 0, 0)',
-    width: withTiming( mouthLeft.value, {
+    width: withTiming( mouthH.value, {
       duration: 100
     } ),
-    height: withTiming( mouthTop.value, {
+    height: withTiming( mouthW.value, {
       duration: 100
     } ),
-    left: withTiming( mouthBottom.value, {
+    left: withTiming( mouthX.value, {
       duration: 100
     } ),
-    top: withTiming( aFaceY.value, {
+    top: withTiming( mouthY.value, {
       duration: 100
     } )
 
@@ -190,6 +254,10 @@ function FaceDetection(): ReactNode {
       aFaceH.value = 0
       aFaceX.value = 0
       aFaceY.value = 0
+      mouthH.value = 0
+      mouthW.value = 0
+      mouthX.value = 0
+      mouthY.value = 0  
       return
     }
 
@@ -202,31 +270,41 @@ function FaceDetection(): ReactNode {
     } = bounds
     const { contours } = faces.value[0]
 
-    if (!contours) return;
+    if (!contours){
+      mouthH.value = 0;
+      mouthW.value = 0;
+      mouthX.value = 0;
+      mouthY.value = 0;
+      return;
+    }
 
-        const {
-            UPPER_LIP_TOP,
-            LOWER_LIP_BOTTOM
-        } = contours as Record<string, {x:number; y:number}[]>;
+    console.log('contours - detected')
+{
+        // const {
+        //     UPPER_LIP_TOP,
+        //     LOWER_LIP_BOTTOM, 
+        //     UPPER_LIP_BOTTOM,
+        //     LOWER_LIP_TOP
+        // } = contours as Record<string, {x:number; y:number}[]>;
 
-        if (UPPER_LIP_TOP.length > 0 && LOWER_LIP_BOTTOM.length > 0) {
-            const allLipPoints = [...UPPER_LIP_TOP, ...LOWER_LIP_BOTTOM];
+        // if (UPPER_LIP_TOP.length > 0 && LOWER_LIP_BOTTOM.length > 0) {
+          
+        //     const allLipPoints = [...UPPER_LIP_TOP, ...LOWER_LIP_BOTTOM, ...UPPER_LIP_BOTTOM, ...LOWER_LIP_TOP];
 
-            const minX = Math.min(...allLipPoints.map(p => p.x))
-            const maxX = Math.max(...allLipPoints.map(p=> p.x));
-            const minY = Math.min(...allLipPoints.map(p=> p.y));
-            const maxY = Math.max(...allLipPoints.map(p=>p.y));
+        //     const minX = Math.min(...allLipPoints.map(p => p.x))
+        //     const maxX = Math.max(...allLipPoints.map(p=> p.x));
+        //     const minY = Math.min(...allLipPoints.map(p=> p.y));
+        //     const maxY = Math.max(...allLipPoints.map(p=>p.y));
 
-            const mouthWidth = maxX - minX;
-            const mouthHeight = maxY - minY;
+        //     const mouthWidth = 128;
+        //     const mouthHeight = 64;
+        //     mouthH.value = mouthWidth
+        //     mouthW.value = mouthHeight
+        //     mouthX.value = minX
+        //     mouthY.value = minY
 
-            mouthRight.value = maxX
-            mouthLeft.value = minX
-            mouthTop.value = maxY
-            mouthBottom.value = minY
-
-        }
-    
+        // }
+}
 
     aFaceW.value = width
     aFaceH.value = height
@@ -263,6 +341,7 @@ function FaceDetection(): ReactNode {
             { ...faceDetectorOptions }
             autoMode={ true }
             cameraFacing={ 'front' }
+          
           />
 
           <Animated.View
@@ -270,7 +349,17 @@ function FaceDetection(): ReactNode {
           />
           <Animated.View
             style = {lipBoxStyle}
-            />
+          />
+
+          <Canvas style = {StyleSheet.absoluteFill} pointerEvents='none'>
+            <Points
+              points = {LipMeshPoints}
+              mode = 'points'
+              color = 'cyan'
+              strokeWidth={4}
+              strokeCap={'round'}
+              />
+          </Canvas>
 
           { cameraPaused && <Text
             style={ {
