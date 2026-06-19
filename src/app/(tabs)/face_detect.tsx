@@ -15,7 +15,8 @@ import {
   CameraPosition,
   CameraRef,
   useCameraDevice,
-  useCameraPermission
+  useCameraPermission,
+  useVideoOutput
 } from 'react-native-vision-camera'
 import {
   SafeAreaProvider,
@@ -24,7 +25,6 @@ import {
 import {
   Camera,
   Face,
-  useImageFaceDetector,
   FaceDetectorOptions
 } from 'react-native-vision-camera-face-detector'
 import Animated, {
@@ -35,6 +35,17 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import {Canvas, Points, vec} from '@shopify/react-native-skia'
+import { mayInitWithUrlAsync } from 'expo-web-browser'
+
+
+type StateMachine = 
+    'idle' // 0, camera is on and displaying preview, waiting for user to start recording
+  | 'capturing' // 1, capturing frames, once 75 frames are reached, switch to intferencing state
+  | 'inferencing' // 2, run SCRFD face & lip detection, once 75 valid frames, run LipNet interpretation, then switch to speaking state
+  | 'speaking' // 3, display LipNet results and use text-to-speech to speak the results, once done, switch back to idle state
+  | 'done'; // 4, all done, waiting for user to start another recording
+
+    const [appState, setAppState] = useState<StateMachine>('idle');
 
 /**
  * Entry point component
@@ -56,6 +67,7 @@ import {Canvas, Points, vec} from '@shopify/react-native-skia'
  *
  * @return {ReactNode} Component
  */
+
 function FaceDetection(): ReactNode {
   const insets = useSafeAreaInsets()
   const {
@@ -86,7 +98,7 @@ function FaceDetection(): ReactNode {
     performanceMode: 'fast',
     runClassifications: false,
     runContours: true,
-    runLandmarks: true,
+    runLandmarks: false,
     windowWidth: width,
     windowHeight: height
   } ).current
@@ -98,6 +110,10 @@ function FaceDetection(): ReactNode {
 //     appState === 'active'
 //   )
   const cameraDevice = useCameraDevice( cameraFacing )
+
+  const videoOutput = useVideoOutput({
+    targetResolution: {width: 1280, height:720}
+  })
   //
   // vision camera ref
   //
@@ -115,6 +131,7 @@ function FaceDetection(): ReactNode {
   const mouthH = useSharedValue(0)
   const mouthX = useSharedValue(0)
   const mouthY = useSharedValue(0)
+  const tiltAmount = useSharedValue(0)
 
   const LipMeshPoints = useDerivedValue(()=>{
     if (faces.value.length === 0) return [];
@@ -138,6 +155,21 @@ function FaceDetection(): ReactNode {
       ]
       const SCALE_FACTOR = 1.6
       const X_OFFSET = ((width * SCALE_FACTOR - width) / 2 )
+      const Y_CORRECTION = 40
+
+      // LIP TILT CALCULATION
+
+      const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p:min, allLipPoints[0])
+      const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p:max, allLipPoints[0])
+
+      tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
+
+      //const leftMostPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length)]
+      //const rightMostPoint = UPPER_LIP_TOP[Math.ceil(UPPER_LIP_TOP.length)]
+
+      //tiltAmount.value = leftMostPoint.y - rightMostPoint.y
+
+
       // LIP BOX DRAWING
 
       const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
@@ -153,22 +185,16 @@ function FaceDetection(): ReactNode {
 
       mouthW.value = LipNetHeight
       mouthH.value = LipNetWidth
-      mouthX.value = LipCenterX - X_OFFSET - LipNetWidth/2
-      mouthY.value = LipCenterY - 40 - LipNetHeight/2
+      mouthX.value = LipCenterX - X_OFFSET - LipNetWidth/2 
+      mouthY.value = LipCenterY - Y_CORRECTION - LipNetHeight/2 
 
 
       // LIP CONTOUR DRAWING
 
-
-
-
-
-
-
       return allLipPoints.map(p=>{
         const scaledX = p.x * SCALE_FACTOR
         const centeredX = scaledX - X_OFFSET
-        return vec(centeredX, (p.y-40))
+        return vec(centeredX, (p.y-Y_CORRECTION))
       })
     }    
     return []
@@ -204,6 +230,7 @@ function FaceDetection(): ReactNode {
     borderRightColor: 'rgb(255, 0, 0)',
     borderBottomColor: 'rgb(255, 0, 0)',
     borderTopColor: 'rgb(255, 0, 0)',
+
     width: withTiming( mouthH.value, {
       duration: 100
     } ),
@@ -215,7 +242,10 @@ function FaceDetection(): ReactNode {
     } ),
     top: withTiming( mouthY.value, {
       duration: 100
-    } )
+    } ),
+    transform: [
+      {rotateZ: `${tiltAmount.value}rad`,}
+    ] 
 
   }))
 
@@ -277,8 +307,6 @@ function FaceDetection(): ReactNode {
       mouthY.value = 0;
       return;
     }
-
-    console.log('contours - detected')
 {
         // const {
         //     UPPER_LIP_TOP,
@@ -310,13 +338,6 @@ function FaceDetection(): ReactNode {
     aFaceH.value = height
     aFaceX.value = x
     aFaceY.value = y
-
-
-
-
-
-
-
   }
 
   return ( <>
@@ -333,6 +354,12 @@ function FaceDetection(): ReactNode {
           <Camera
             ref={ camera }
             style={ StyleSheet.absoluteFill }
+            outputs = {[videoOutput]}
+            constraints={[
+              {resolutionBias: videoOutput},
+              {binned: true},
+              {fps: 30}
+            ]}
             isActive={ true }
             device={ cameraDevice }
             orientationSource={ 'device' }
@@ -416,6 +443,34 @@ function FaceDetection(): ReactNode {
     </View>
   </> );
 }
+
+
+function beginRecordingPhase(): void{
+
+}
+
+
+
+
+function saveFrameBuffer(): void {
+  // Implement frame buffer saving logic here.
+  const frameBuffer = []
+
+  if (frameBuffer.length === 75) { // end recording phase
+    return
+  }
+
+}
+
+  const handleStartCapture = () => {
+    if (appState !== 'idle' && appState !== 'done') return;
+    setAppState('capturing');
+  };
+
+  const handleStopCapture = () => {
+    if (appState !== 'capturing') return;
+    setAppState('idle'); 
+  };
 
 
 export default function face_detect() {

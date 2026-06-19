@@ -10,7 +10,10 @@
       "supportsTablet": true
     },
     "android": {
-      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -31,7 +34,8 @@
             "minSdkVersion": 26
           }
         }
-      ]
+      ],
+      "onnxruntime-react-native"
     ]
   }
 }
