@@ -46,6 +46,7 @@ type StateMachine =
   | 'done'; // 4, all done, waiting for user to start another recording
 
     const [appState, setAppState] = useState<StateMachine>('idle');
+    const frameBuffer = []
 
 /**
  * Entry point component
@@ -94,6 +95,7 @@ function FaceDetection(): ReactNode {
     cameraFacing,
     setCameraFacing
   ] = useState<Extract<CameraPosition, 'front' | 'back'>>( 'front' )
+  
   const faceDetectorOptions = useRef<FaceDetectorOptions>( {
     performanceMode: 'fast',
     runClassifications: false,
@@ -454,7 +456,7 @@ function beginRecordingPhase(): void{
 
 function saveFrameBuffer(): void {
   // Implement frame buffer saving logic here.
-  const frameBuffer = []
+  
 
   if (frameBuffer.length === 75) { // end recording phase
     return
@@ -469,8 +471,20 @@ function saveFrameBuffer(): void {
 
   const handleStopCapture = () => {
     if (appState !== 'capturing') return;
-    setAppState('idle'); 
+    setAppState('done'); 
   };
+
+  const handleDoneState = () => {
+    // Reset/frameBuffer to empty array without changing its reference (works if frameBuffer is const)
+    if (Array.isArray(frameBuffer) && frameBuffer.length > 0) {
+      (frameBuffer as any[]).length = 0;
+    }
+    if (appState === 'capturing') {
+      setAppState('idle')
+    }
+  }
+
+
 
 
 export default function face_detect() {
