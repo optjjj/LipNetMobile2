@@ -16,7 +16,8 @@ import {
   CameraRef,
   useCameraDevice,
   useCameraPermission,
-  useVideoOutput
+  useVideoOutput,
+  Frame
 } from 'react-native-vision-camera'
 import {
   SafeAreaProvider,
@@ -25,7 +26,8 @@ import {
 import {
   Camera,
   Face,
-  FaceDetectorOptions
+  FaceDetectorOptions,
+  
 } from 'react-native-vision-camera-face-detector'
 import Animated, {
   useAnimatedStyle,
@@ -46,7 +48,19 @@ type StateMachine =
   | 'done'; // 4, all done, waiting for user to start another recording
 
     const [appState, setAppState] = useState<StateMachine>('idle');
-    const frameBuffer = []
+    const frameBuffer: any[] = []
+    const [validFrameCount, setValidFrameCount] = useState<number>(0);
+
+    const buttonProps = () => {
+    switch (appState) {
+      case 'idle': return { text: 'Start Capture', onPress: handleStartCapture };
+      case 'capturing': return { text: 'Stop Capture', onPress: handleStopCapture };
+      case 'inferencing': return { text: 'Analyzing Lips...', onPress: () => {} }; 
+      case 'speaking': return { text: 'Speaking...', onPress: () => {} };
+      case 'done': return { text: 'Start Again', onPress: handleStartCapture };
+      default: return { text: 'Unknown', onPress: () => {} };
+    }
+  };
 
 /**
  * Entry point component
@@ -165,14 +179,6 @@ function FaceDetection(): ReactNode {
       const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p:max, allLipPoints[0])
 
       tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
-
-      //const leftMostPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length)]
-      //const rightMostPoint = UPPER_LIP_TOP[Math.ceil(UPPER_LIP_TOP.length)]
-
-      //tiltAmount.value = leftMostPoint.y - rightMostPoint.y
-
-
-      // LIP BOX DRAWING
 
       const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
       const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
@@ -309,37 +315,30 @@ function FaceDetection(): ReactNode {
       mouthY.value = 0;
       return;
     }
-{
-        // const {
-        //     UPPER_LIP_TOP,
-        //     LOWER_LIP_BOTTOM, 
-        //     UPPER_LIP_BOTTOM,
-        //     LOWER_LIP_TOP
-        // } = contours as Record<string, {x:number; y:number}[]>;
-
-        // if (UPPER_LIP_TOP.length > 0 && LOWER_LIP_BOTTOM.length > 0) {
-          
-        //     const allLipPoints = [...UPPER_LIP_TOP, ...LOWER_LIP_BOTTOM, ...UPPER_LIP_BOTTOM, ...LOWER_LIP_TOP];
-
-        //     const minX = Math.min(...allLipPoints.map(p => p.x))
-        //     const maxX = Math.max(...allLipPoints.map(p=> p.x));
-        //     const minY = Math.min(...allLipPoints.map(p=> p.y));
-        //     const maxY = Math.max(...allLipPoints.map(p=>p.y));
-
-        //     const mouthWidth = 128;
-        //     const mouthHeight = 64;
-        //     mouthH.value = mouthWidth
-        //     mouthW.value = mouthHeight
-        //     mouthX.value = minX
-        //     mouthY.value = minY
-
-        // }
-}
 
     aFaceW.value = width
     aFaceH.value = height
     aFaceX.value = x
     aFaceY.value = y
+
+    if (appState === 'capturing'){
+
+      const croppedFrameData = 1
+      //const croppedFrameData = extractPixels(frame, mouthBox)
+      frameBuffer.push(croppedFrameData)
+      setValidFrameCount(frameBuffer.length)
+
+      if (frameBuffer.length >= 75){
+        console.log("75 Frames Captured")
+        setAppState('inferencing')
+      }
+
+      // send frameBuffer to LipNet, then clear it
+
+
+
+    }
+
   }
 
   return ( <>
@@ -447,11 +446,29 @@ function FaceDetection(): ReactNode {
 }
 
 
+
+async function loadLipNet(): void{
+
+}
+
 function beginRecordingPhase(): void{
 
 }
 
-
+// const handleButtonPress = () => {
+//   if (appState === 'idle'){
+//     handleStartCapture();
+//   }
+//   if (appState === 'capturing'){
+//     handleStopCapture();
+//   }
+//   if (appState === 'speaking'){
+//     handleSpeaking();
+//   }
+//   if (appState === 'done'){
+//     handleReset();
+//   }
+// }
 
 
 function saveFrameBuffer(): void {
@@ -471,7 +488,9 @@ function saveFrameBuffer(): void {
 
   const handleStopCapture = () => {
     if (appState !== 'capturing') return;
-    setAppState('done'); 
+    (frameBuffer as any[]).length = 0;
+    setAppState('done')
+    handleDoneState()
   };
 
   const handleDoneState = () => {
@@ -479,14 +498,96 @@ function saveFrameBuffer(): void {
     if (Array.isArray(frameBuffer) && frameBuffer.length > 0) {
       (frameBuffer as any[]).length = 0;
     }
-    if (appState === 'capturing') {
-      setAppState('idle')
-    }
+  }
+
+  const handleRestart = () => {
+
   }
 
 
 
 
 export default function face_detect() {
-    return FaceDetection();
+    return (FaceDetection(),
+      <View style = {styles.container}>
+        {appState === 'capturing' && (
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>Valid Frames: [{validFrameCount}/75]</Text>
+        </View>
+      )}
+
+      {/* Control Button */}
+      <View style={styles.buttonContainer}>
+        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
+      </View>
+      </View>
+  );
 }
+const styles = StyleSheet.create({
+
+ // CAMERA STLYES
+
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  message: {
+    textAlign: 'center',
+    paddingBottom: 10,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 60,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    width: '20%',
+    alignSelf: 'center',
+    borderRadius: 16,
+    paddingVertical: 10,
+    overflow: 'hidden',
+  },
+  button: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recordDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#cd5151',
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  text: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+
+  // PROGRESS BAR STYLES
+
+  progressContainer: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    zIndex: 10,
+    backgroundColor: 'white',
+    width: '100%',
+    height: 40,
+    paddingTop: 4,
+  },
+
+  progressText: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    textAlign: 'center',
+    width: '100%',
+    fontSize: 12,
+    color: 'green',
+  }
+})
