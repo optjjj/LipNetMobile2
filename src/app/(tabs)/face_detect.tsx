@@ -155,7 +155,7 @@ function saveFrameBuffer(): void {
   // Implement frame buffer saving logic here.
   
 
-  if (frameBuffer.length === 75) { // end recording phase
+  if (frameBuffer.current.length === 75) { // end recording phase
     return
   }
 
@@ -168,15 +168,15 @@ function saveFrameBuffer(): void {
 
   const handleStopCapture = () => {
     if (appState !== 'capturing') return;
-    (frameBuffer as any[]).length = 0;
+    frameBuffer.current = []
     setAppState('done')
     handleDoneState()
   };
 
   const handleDoneState = () => {
     // Reset/frameBuffer to empty array without changing its reference (works if frameBuffer is const)
-    if (Array.isArray(frameBuffer) && frameBuffer.length > 0) {
-      (frameBuffer as any[]).length = 0;
+    if (Array.isArray(frameBuffer) && frameBuffer.current.length > 0) {
+      frameBuffer.current = []
     }
   }
 
@@ -361,10 +361,10 @@ function saveFrameBuffer(): void {
 
       const croppedFrameData = 1
       //const croppedFrameData = extractPixels(frame, mouthBox)
-      frameBuffer.push(croppedFrameData)
-      setValidFrameCount(frameBuffer.length)
+      frameBuffer.current.push(croppedFrameData)
+      setValidFrameCount(frameBuffer.current.length)
 
-      if (frameBuffer.length >= 75){
+      if (frameBuffer.current.length >= 75){
         console.log("75 Frames Captured")
         setAppState('inferencing')
       }
