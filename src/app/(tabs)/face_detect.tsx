@@ -253,18 +253,23 @@ function saveFrameBuffer(): void {
     borderRightColor: 'rgb(0,255,0)',
     borderBottomColor: 'rgb(0,255,0)',
     borderTopColor: 'rgb(0,255,0)',
-    width: withTiming( aFaceW.value, {
-      duration: 100
-    } ),
-    height: withTiming( aFaceH.value, {
-      duration: 100
-    } ),
-    left: withTiming( aFaceX.value, {
-      duration: 100
-    } ),
-    top: withTiming( aFaceY.value, {
-      duration: 100
-    } )
+    width: aFaceW.value,
+    height: aFaceH.value,
+    left: aFaceX.value,
+    top: aFaceY.value
+
+    // width: withTiming( aFaceW.value, {
+    //   duration: 100
+    // } ),
+    // height: withTiming( aFaceH.value, {
+    //   duration: 100
+    // } ),
+    // left: withTiming( aFaceX.value, {
+    //   duration: 100
+    // } ),
+    // top: withTiming( aFaceY.value, {
+    //   duration: 100
+    // } )
   } ) )
 
   const lipBoxStyle = useAnimatedStyle (() =>({
@@ -275,18 +280,23 @@ function saveFrameBuffer(): void {
     borderBottomColor: 'rgb(255, 0, 0)',
     borderTopColor: 'rgb(255, 0, 0)',
 
-    width: withTiming( mouthH.value, {
-      duration: 100
-    } ),
-    height: withTiming( mouthW.value, {
-      duration: 100
-    } ),
-    left: withTiming( mouthX.value, {
-      duration: 100
-    } ),
-    top: withTiming( mouthY.value, {
-      duration: 100
-    } ),
+    width: mouthH.value,
+    height: mouthW.value,
+    left: mouthX.value,
+    top: mouthY.value,
+
+    // width: withTiming( mouthH.value, {
+    //   duration: 100
+    // } ),
+    // height: withTiming( mouthW.value, {
+    //   duration: 100
+    // } ),
+    // left: withTiming( mouthX.value, {
+    //   duration: 100
+    // } ),
+    // top: withTiming( mouthY.value, {
+    //   duration: 100
+    // } ),
     transform: [
       {rotateZ: `${tiltAmount.value}rad`,}
     ] 
@@ -320,7 +330,7 @@ function saveFrameBuffer(): void {
     detectedFaces: Face[]
   ): void {
     faces.value = detectedFaces
-    console.log( 'handleFacesDetected - detected', faces.value.length, 'faces' )
+    //console.log( 'handleFacesDetected - detected', faces.value.length, 'faces' )
 
     // if no faces are detected we do nothing
     if ( faces.value.length <= 0 ) {
@@ -562,9 +572,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 10,
     left: 0,
-    zIndex: 10,
+    zIndex: 0,
     backgroundColor: 'white',
-    width: '100%',
+    width: '50%',
     height: 40,
     paddingTop: 4,
   },
