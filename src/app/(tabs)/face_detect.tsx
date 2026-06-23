@@ -193,6 +193,7 @@ function saveFrameBuffer(): void {
   const handleStopCapture = () => {
     if (appState !== 'capturing') return;
     frameBuffer.current = []
+    progressRef.current?.updateCount(0)
     setAppState('done')
     handleDoneState()
   };
@@ -441,9 +442,7 @@ function saveFrameBuffer(): void {
           />
         <View style = {styles.container}>
         {appState === 'capturing' && (
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>Valid Frames: [{validFrameCount}/75]</Text>
-        </View>
+          <FrameProgressBar ref = {progressRef} />
       )}
 
       {/* Control Button */}
