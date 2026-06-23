@@ -370,9 +370,15 @@ function saveFrameBuffer(): void {
     if (appState === 'capturing'){
 
       const croppedFrameData = 1
-      //const croppedFrameData = extractPixels(frame, mouthBox)
       frameBuffer.current.push(croppedFrameData)
-      setValidFrameCount(frameBuffer.current.length)
+      //const croppedFrameData = extractPixels(frame, mouthBox)
+      
+      if (frameBuffer.current.length % 5 === 0 || frameBuffer.current.length === 75){
+        setValidFrameCount(frameBuffer.current.length)
+      }
+      
+
+
 
       if (frameBuffer.current.length >= 75){
         console.log("75 Frames Captured")
