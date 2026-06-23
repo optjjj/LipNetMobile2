@@ -230,7 +230,7 @@ function saveFrameBuffer(): void {
         ...LOWER_LIP_TOP,
         ...LOWER_LIP_BOTTOM
       ]
-      const SCALE_FACTOR = 1.5
+      const SCALE_FACTOR = 1.65
       const X_OFFSET = ((width * SCALE_FACTOR - width) / 2 )
       const Y_CORRECTION = 40
 
@@ -421,6 +421,16 @@ function saveFrameBuffer(): void {
     >
       { hasPermission && cameraDevice ? <>
         { cameraMounted && <>
+          <View style = {styles.container}>
+          {appState === 'capturing' && (
+          <FrameProgressBar ref = {progressRef} />
+      )}
+
+      {/* Control Button */}
+      <View style={styles.buttonContainer}>
+        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
+      </View>
+      </View>
           <Camera
             ref={ camera }
             style={ StyleSheet.absoluteFill }
@@ -440,16 +450,7 @@ function saveFrameBuffer(): void {
             cameraFacing={ 'front' }
           
           />
-        <View style = {styles.container}>
-        {appState === 'capturing' && (
-          <FrameProgressBar ref = {progressRef} />
-      )}
 
-      {/* Control Button */}
-      <View style={styles.buttonContainer}>
-        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
-      </View>
-      </View>
 
           <Animated.View
             style={ boundingBoxStyle}
