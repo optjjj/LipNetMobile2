@@ -47,19 +47,6 @@ type StateMachine =
   | 'speaking' // 3, display LipNet results and use text-to-speech to speak the results, once done, switch back to idle state
   | 'done'; // 4, all done, waiting for user to start another recording
 
-
-
-    const buttonProps = () => {
-    switch (appState) {
-      case 'idle': return { text: 'Start Capture', onPress: handleStartCapture };
-      case 'capturing': return { text: 'Stop Capture', onPress: handleStopCapture };
-      case 'inferencing': return { text: 'Analyzing Lips...', onPress: () => {} }; 
-      case 'speaking': return { text: 'Speaking...', onPress: () => {} };
-      case 'done': return { text: 'Start Again', onPress: handleStartCapture };
-      default: return { text: 'Unknown', onPress: () => {} };
-    }
-  };
-
 /**
  * Entry point component
  *
@@ -81,14 +68,16 @@ type StateMachine =
  * @return {ReactNode} Component
  */
 
-function FaceDetection(): ReactNode {
-  const insets = useSafeAreaInsets()
+
+
+export default function FaceDetectionScreen(): ReactNode {
+const insets = useSafeAreaInsets()
   const {
     width,
     height
   } = useWindowDimensions()
   const [appState, setAppState] = useState<StateMachine>('idle');
-  const frameBuffer: any[] = []
+  const frameBuffer = useRef<any[]>([])
   const [validFrameCount, setValidFrameCount] = useState<number>(0);
   const {
     hasPermission,
@@ -119,6 +108,17 @@ function FaceDetection(): ReactNode {
     windowWidth: width,
     windowHeight: height
   } ).current
+  
+    const buttonProps = () => {
+    switch (appState) {
+      case 'idle': return { text: 'Start Capture', onPress: handleStartCapture };
+      case 'capturing': return { text: 'Stop Capture', onPress: handleStopCapture };
+      case 'inferencing': return { text: 'Analyzing Lips...', onPress: () => {} }; 
+      case 'speaking': return { text: 'Speaking...', onPress: () => {} };
+      case 'done': return { text: 'Start Again', onPress: handleStartCapture };
+      default: return { text: 'Unknown', onPress: () => {} };
+    }
+  };
 //   const isFocused = useIsFocused()
 //   const appState = useAppState()
 //   const isCameraActive = (
@@ -150,6 +150,41 @@ function FaceDetection(): ReactNode {
   const mouthY = useSharedValue(0)
   const tiltAmount = useSharedValue(0)
 
+  
+function saveFrameBuffer(): void {
+  // Implement frame buffer saving logic here.
+  
+
+  if (frameBuffer.length === 75) { // end recording phase
+    return
+  }
+
+}
+
+  const handleStartCapture = () => {
+    if (appState !== 'idle' && appState !== 'done') return;
+    setAppState('capturing');
+  };
+
+  const handleStopCapture = () => {
+    if (appState !== 'capturing') return;
+    (frameBuffer as any[]).length = 0;
+    setAppState('done')
+    handleDoneState()
+  };
+
+  const handleDoneState = () => {
+    // Reset/frameBuffer to empty array without changing its reference (works if frameBuffer is const)
+    if (Array.isArray(frameBuffer) && frameBuffer.length > 0) {
+      (frameBuffer as any[]).length = 0;
+    }
+  }
+
+  const handleRestart = () => {
+
+  }
+
+
   const LipMeshPoints = useDerivedValue(()=>{
     if (faces.value.length === 0) return [];
 
@@ -170,7 +205,7 @@ function FaceDetection(): ReactNode {
         ...LOWER_LIP_TOP,
         ...LOWER_LIP_BOTTOM
       ]
-      const SCALE_FACTOR = 1.6
+      const SCALE_FACTOR = 1.5
       const X_OFFSET = ((width * SCALE_FACTOR - width) / 2 )
       const Y_CORRECTION = 40
 
@@ -333,15 +368,10 @@ function FaceDetection(): ReactNode {
         console.log("75 Frames Captured")
         setAppState('inferencing')
       }
-
+    }
       // send frameBuffer to LipNet, then clear it
 
-
-
-    }
-
   }
-
   return ( <>
     <View
       style={ [
@@ -372,6 +402,18 @@ function FaceDetection(): ReactNode {
             cameraFacing={ 'front' }
           
           />
+        <View style = {styles.container}>
+        {appState === 'capturing' && (
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>Valid Frames: [{validFrameCount}/75]</Text>
+        </View>
+      )}
+
+      {/* Control Button */}
+      <View style={styles.buttonContainer}>
+        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
+      </View>
+      </View>
 
           <Animated.View
             style={ boundingBoxStyle}
@@ -446,9 +488,7 @@ function FaceDetection(): ReactNode {
   </> );
 }
 
-
-
-async function loadLipNet(): void{
+function loadLipNet(): void{
 
 }
 
@@ -471,59 +511,6 @@ function beginRecordingPhase(): void{
 //   }
 // }
 
-
-function saveFrameBuffer(): void {
-  // Implement frame buffer saving logic here.
-  
-
-  if (frameBuffer.length === 75) { // end recording phase
-    return
-  }
-
-}
-
-  const handleStartCapture = () => {
-    if (appState !== 'idle' && appState !== 'done') return;
-    setAppState('capturing');
-  };
-
-  const handleStopCapture = () => {
-    if (appState !== 'capturing') return;
-    (frameBuffer as any[]).length = 0;
-    setAppState('done')
-    handleDoneState()
-  };
-
-  const handleDoneState = () => {
-    // Reset/frameBuffer to empty array without changing its reference (works if frameBuffer is const)
-    if (Array.isArray(frameBuffer) && frameBuffer.length > 0) {
-      (frameBuffer as any[]).length = 0;
-    }
-  }
-
-  const handleRestart = () => {
-
-  }
-
-
-
-
-export default function face_detect() {
-    return (FaceDetection(),
-      <View style = {styles.container}>
-        {appState === 'capturing' && (
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>Valid Frames: [{validFrameCount}/75]</Text>
-        </View>
-      )}
-
-      {/* Control Button */}
-      <View style={styles.buttonContainer}>
-        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
-      </View>
-      </View>
-  );
-}
 const styles = StyleSheet.create({
 
  // CAMERA STLYES
