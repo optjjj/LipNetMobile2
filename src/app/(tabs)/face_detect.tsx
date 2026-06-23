@@ -47,9 +47,7 @@ type StateMachine =
   | 'speaking' // 3, display LipNet results and use text-to-speech to speak the results, once done, switch back to idle state
   | 'done'; // 4, all done, waiting for user to start another recording
 
-    const [appState, setAppState] = useState<StateMachine>('idle');
-    const frameBuffer: any[] = []
-    const [validFrameCount, setValidFrameCount] = useState<number>(0);
+
 
     const buttonProps = () => {
     switch (appState) {
@@ -89,6 +87,9 @@ function FaceDetection(): ReactNode {
     width,
     height
   } = useWindowDimensions()
+  const [appState, setAppState] = useState<StateMachine>('idle');
+  const frameBuffer: any[] = []
+  const [validFrameCount, setValidFrameCount] = useState<number>(0);
   const {
     hasPermission,
     requestPermission
