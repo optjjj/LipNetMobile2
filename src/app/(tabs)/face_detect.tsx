@@ -2,7 +2,9 @@ import React, {
   ReactNode,
   useEffect,
   useRef,
-  useState
+  useState, 
+  forwardRef, 
+  useImperativeHandle
 } from 'react'
 import {
   StyleSheet,
@@ -70,6 +72,28 @@ type StateMachine =
 
 
 
+export interface ProgressBarRef{
+  updateCount: (count: number) => void;
+}
+
+const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
+  const [count, setCount] = useState(0);
+
+  useImperativeHandle(ref, () => ({
+    updateCount: (newCount: number) => setCount(newCount),
+  }))
+
+  return (
+    <View style = {styles.progressContainer}>
+      <Text style = {styles.progressText}> Valid Frames: [{count}/75]</Text>
+    </View>
+  )
+})
+
+
+
+
+
 export default function FaceDetectionScreen(): ReactNode {
 const insets = useSafeAreaInsets()
   const {
@@ -78,7 +102,7 @@ const insets = useSafeAreaInsets()
   } = useWindowDimensions()
   const [appState, setAppState] = useState<StateMachine>('idle');
   const frameBuffer = useRef<any[]>([])
-  const [validFrameCount, setValidFrameCount] = useState<number>(0);
+  const progressRef = useRef<ProgressBarRef>(null);
   const {
     hasPermission,
     requestPermission
@@ -373,10 +397,7 @@ function saveFrameBuffer(): void {
       frameBuffer.current.push(croppedFrameData)
       //const croppedFrameData = extractPixels(frame, mouthBox)
       
-      if (frameBuffer.current.length % 5 === 0 || frameBuffer.current.length === 75){
-        setValidFrameCount(frameBuffer.current.length)
-      }
-      
+      progressRef.current?.updateCount(frameBuffer.current.length);
 
 
 
