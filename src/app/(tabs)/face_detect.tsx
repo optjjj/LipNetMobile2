@@ -421,16 +421,6 @@ function saveFrameBuffer(): void {
     >
       { hasPermission && cameraDevice ? <>
         { cameraMounted && <>
-          <View style = {styles.container}>
-          {appState === 'capturing' && (
-          <FrameProgressBar ref = {progressRef} />
-      )}
-
-      {/* Control Button */}
-      <View style={styles.buttonContainer}>
-        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
-      </View>
-      </View>
           <Camera
             ref={ camera }
             style={ StyleSheet.absoluteFill }
@@ -450,7 +440,16 @@ function saveFrameBuffer(): void {
             cameraFacing={ 'front' }
           
           />
+        <View style = {styles.container}>
+        {appState === 'capturing' && (
+          <FrameProgressBar ref = {progressRef} />
+      )}
 
+      {/* Control Button */}
+      <View style={styles.buttonContainer}>
+        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
+      </View>
+      </View>
 
           <Animated.View
             style={ boundingBoxStyle}
@@ -572,6 +571,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 10,
     overflow: 'hidden',
+    zIndex: 10
   },
   button: {
     flex: 1,
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 10,
     left: 0,
-    zIndex: 0,
+    zIndex: 10,
     backgroundColor: 'white',
     width: '50%',
     height: 40,
@@ -614,5 +614,6 @@ const styles = StyleSheet.create({
     width: '100%',
     fontSize: 12,
     color: 'green',
+    zIndex: 10
   }
 })
