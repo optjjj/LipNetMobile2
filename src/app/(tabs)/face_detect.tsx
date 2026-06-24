@@ -19,7 +19,6 @@ import {
   useCameraDevice,
   useCameraPermission,
   useVideoOutput,
-  Frame,
   useFrameOutput
 } from 'react-native-vision-camera'
 import {
@@ -30,7 +29,6 @@ import {
   Camera,
   Face,
   FaceDetectorOptions,
-  
 } from 'react-native-vision-camera-face-detector'
 import Animated, {
   useAnimatedStyle,
@@ -40,7 +38,7 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import {Canvas, Points, vec} from '@shopify/react-native-skia'
-import { runOnJS } from 'react-native-worklets'
+import { useRunOnJS } from 'react-native-worklets-core'
 import {crop} from 'vision-camera-cropper'
 
 
@@ -155,8 +153,24 @@ const insets = useSafeAreaInsets()
   const videoOutput = useVideoOutput({
     targetResolution: {width: 1280, height:720}
   })
+const saveFrameBuffer = (base64MouthData: any) => {
+  // Implement frame buffer saving logic here.
+  console.log("Saving to Buffer...")
+  frameBuffer.current.push(base64MouthData)
+  console.log("Successfully Saved to frameBuffer!")
+  console.log("frameBuffer's length is now: ", frameBuffer.current.length)
+
+  progressRef.current?.updateCount(frameBuffer.current.length)
+
+  if (frameBuffer.current.length === 75) { // end recording phase
+    console.log("75 Frames Captured")
+    isCapturing.value = false
+    setAppState('inferencing')
+  }
+
+}
+  const runSaveFrameBuffer = useRunOnJS(saveFrameBuffer, []);
   const frameOutput = useFrameOutput({
-  
   pixelFormat: 'yuv',
   onFrame: (frame) => {
     'worklet';
@@ -189,7 +203,7 @@ const insets = useSafeAreaInsets()
         //   pixelFormat: 'rgb',
         //   dataType: 'uint8'
         // })
-        runOnJS(saveFrameBuffer)(croppedResult);
+        runSaveFrameBuffer(croppedResult)
       }
 
 
@@ -221,22 +235,7 @@ const insets = useSafeAreaInsets()
   const tiltAmount = useSharedValue(0)
 
   
-const saveFrameBuffer = (base64MouthData: any) => {
-  // Implement frame buffer saving logic here.
-  console.log("Saving to Buffer...")
-  frameBuffer.current.push(base64MouthData)
-  console.log("Successfully Saved to frameBuffer!")
-  console.log("frameBuffer's length is now: ", frameBuffer.current.length)
 
-  progressRef.current?.updateCount(frameBuffer.current.length)
-
-  if (frameBuffer.current.length === 75) { // end recording phase
-    console.log("75 Frames Captured")
-    isCapturing.value = false
-    setAppState('inferencing')
-  }
-
-}
 
   const handleStartCapture = () => {
     if (appState !== 'idle' && appState !== 'done') return;
