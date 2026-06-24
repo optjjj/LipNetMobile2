@@ -156,12 +156,13 @@ const insets = useSafeAreaInsets()
     targetResolution: {width: 1280, height:720}
   })
   const frameOutput = useFrameOutput({
+  
   pixelFormat: 'yuv',
   onFrame: (frame) => {
     'worklet';
 
     try {
-      if (isCapturing.value === true){
+      if (isCapturing.value === true && mouthX.value > 0){
 
 
         const croppedMouth = {
@@ -188,8 +189,6 @@ const insets = useSafeAreaInsets()
         //   pixelFormat: 'rgb',
         //   dataType: 'uint8'
         // })
-
-        console.log("Frame cropped, saving to FrameBuffer")
         runOnJS(saveFrameBuffer)(croppedResult);
       }
     } finally{
@@ -236,7 +235,7 @@ const saveFrameBuffer = (base64MouthData: any) => {
 
   const handleStartCapture = () => {
     if (appState !== 'idle' && appState !== 'done') return;
-    isCapturing.value = true
+    isCapturing.value = true;
     setAppState('capturing');
   };
 
