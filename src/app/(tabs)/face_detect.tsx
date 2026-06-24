@@ -19,7 +19,8 @@ import {
   useCameraDevice,
   useCameraPermission,
   useVideoOutput,
-  Frame
+  Frame,
+  useFrameOutput
 } from 'react-native-vision-camera'
 import {
   SafeAreaProvider,
@@ -39,7 +40,8 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import {Canvas, Points, vec} from '@shopify/react-native-skia'
-import { mayInitWithUrlAsync } from 'expo-web-browser'
+import { ResizePlugin } from 'vision-camera-resize-plugin'
+import { runOnJS } from 'react-native-worklets'
 
 
 type StateMachine = 
@@ -90,7 +92,7 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
   )
 })
 
-
+const isCapturing = useSharedValue<boolean>(false);
 
 
 
@@ -137,8 +139,8 @@ const insets = useSafeAreaInsets()
     switch (appState) {
       case 'idle': return { text: 'Start Capture', onPress: handleStartCapture };
       case 'capturing': return { text: 'Stop Capture', onPress: handleStopCapture };
-      case 'inferencing': return { text: 'Analyzing Lips...', onPress: () => {} }; 
-      case 'speaking': return { text: 'Speaking...', onPress: () => {} };
+      case 'inferencing': return { text: 'Analyzing Lips...', onPress: handleRestart }; 
+      case 'speaking': return { text: 'Speaking...', onPress: handleRestart};
       case 'done': return { text: 'Start Again', onPress: handleStartCapture };
       default: return { text: 'Unknown', onPress: () => {} };
     }
@@ -175,23 +177,29 @@ const insets = useSafeAreaInsets()
   const tiltAmount = useSharedValue(0)
 
   
-function saveFrameBuffer(): void {
+const saveFrameBuffer = (base64MouthData: string) => {
   // Implement frame buffer saving logic here.
-  
+  frameBuffer.current.push(base64MouthData)
+
+  progressRef.current?.updateCount(frameBuffer.current.length)
 
   if (frameBuffer.current.length === 75) { // end recording phase
-    return
+    console.log("75 Frames Captured")
+    isCapturing.value = false
+    setAppState('inferencing')
   }
 
 }
 
   const handleStartCapture = () => {
     if (appState !== 'idle' && appState !== 'done') return;
+    isCapturing.value = true
     setAppState('capturing');
   };
 
   const handleStopCapture = () => {
     if (appState !== 'capturing') return;
+    isCapturing.value = false
     frameBuffer.current = []
     progressRef.current?.updateCount(0)
     setAppState('done')
@@ -203,10 +211,13 @@ function saveFrameBuffer(): void {
     if (Array.isArray(frameBuffer) && frameBuffer.current.length > 0) {
       frameBuffer.current = []
     }
+    progressRef.current?.updateCount(0)
+    isCapturing.value = false
   }
 
   const handleRestart = () => {
-
+    setAppState('done')
+    handleDoneState()
   }
 
 
@@ -271,7 +282,7 @@ function saveFrameBuffer(): void {
 
 
 
-  const boundingBoxStyle = useAnimatedStyle( () => ( {
+  const boundingBoxStyle = useAnimatedStyle( () => ( { // face box
     position: 'absolute',
     borderWidth: 4,
     borderLeftColor: 'rgb(0,255,0)',
@@ -297,7 +308,7 @@ function saveFrameBuffer(): void {
     // } )
   } ) )
 
-  const lipBoxStyle = useAnimatedStyle (() =>({
+  const lipBoxStyle = useAnimatedStyle (() =>({ // lip box
     position: 'absolute',
     borderWidth: 4,
     borderLeftColor: 'rgb(255, 0, 0)',
@@ -392,21 +403,62 @@ function saveFrameBuffer(): void {
     aFaceX.value = x
     aFaceY.value = y
 
-    if (appState === 'capturing'){
+    const saveFrame = (croppedData: any) => {
+      frameBuffer.current.push(croppedData)
 
-      const croppedFrameData = 1
-      frameBuffer.current.push(croppedFrameData)
-      //const croppedFrameData = extractPixels(frame, mouthBox)
+  
+        progressRef.current?.updateCount(frameBuffer.current.length)
       
-      progressRef.current?.updateCount(frameBuffer.current.length);
-
-
-
-      if (frameBuffer.current.length >= 75){
-        console.log("75 Frames Captured")
-        setAppState('inferencing')
-      }
+        if (frameBuffer.current.length === 75){
+          console.log("75 Frames Captured!")
+          isCapturing.value = false
+          setAppState('inferencing')
+        }
     }
+
+const frameOutput = useFrameOutput({
+  pixelFormat: 'yuv',
+  onFrame: (frame) => {
+    'worklet';
+
+    try {
+      if (isCapturing.value === true && mouthW.value > 0){
+        const croppedMouth = resize(frame, {
+          scale: {width: 128, height: 64},
+          crop: {
+            x: mouthX.value,
+            y: mouthY.value,
+            width: mouthW.value,
+            height: mouthH.value
+          },
+          pixelFormat: 'rgb',
+          dataType: 'base64'
+        })
+        runOnJS(saveFrameBuffer)(croppedMouth);
+      }
+    } finally{
+      frame.dispose()
+    }
+  }
+})
+
+
+
+    // if (appState === 'capturing'){
+
+    //   const croppedFrameData = 1
+    //   frameBuffer.current.push(croppedFrameData)
+    //   //const croppedFrameData = extractPixels(frame, mouthBox)
+      
+    //   progressRef.current?.updateCount(frameBuffer.current.length);
+
+
+
+    //   if (frameBuffer.current.length >= 75){
+    //     console.log("75 Frames Captured")
+    //     setAppState('inferencing')
+    //   }
+    // }
       // send frameBuffer to LipNet, then clear it
 
   }
@@ -424,7 +476,7 @@ function saveFrameBuffer(): void {
           <Camera
             ref={ camera }
             style={ StyleSheet.absoluteFill }
-            outputs = {[videoOutput]}
+            outputs = {[videoOutput, frameOutput]}
             constraints={[
               {resolutionBias: videoOutput},
               {binned: true},
