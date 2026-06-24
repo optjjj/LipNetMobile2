@@ -160,7 +160,7 @@ const insets = useSafeAreaInsets()
   pixelFormat: 'yuv',
   onFrame: (frame) => {
     'worklet';
-
+    console.log("worklet is being activated...")
     try {
       if (isCapturing.value === true && mouthX.value > 0){
 
