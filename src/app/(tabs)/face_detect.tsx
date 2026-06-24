@@ -92,10 +92,6 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
   )
 })
 
-
-const {resize} = useResizePlugin()
-
-
 export default function FaceDetectionScreen(): ReactNode {
 const insets = useSafeAreaInsets()
   const {
