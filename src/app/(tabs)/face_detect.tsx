@@ -40,7 +40,7 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import {Canvas, Points, vec} from '@shopify/react-native-skia'
-import { ResizePlugin } from 'vision-camera-resize-plugin'
+import { ResizePlugin, useResizePlugin } from 'vision-camera-resize-plugin'
 import { runOnJS } from 'react-native-worklets'
 
 
@@ -93,7 +93,7 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
 })
 
 
-
+const {resize} = useResizePlugin()
 
 
 export default function FaceDetectionScreen(): ReactNode {
@@ -175,7 +175,7 @@ const insets = useSafeAreaInsets()
             height: mouthH.value
           },
           pixelFormat: 'rgb',
-          dataType: 'base64'
+          dataType: 'uint8'
         })
         runOnJS(saveFrameBuffer)(croppedMouth);
       }
@@ -204,7 +204,7 @@ const insets = useSafeAreaInsets()
   const tiltAmount = useSharedValue(0)
 
   
-const saveFrameBuffer = (base64MouthData: string) => {
+const saveFrameBuffer = (base64MouthData: Uint8Array) => {
   // Implement frame buffer saving logic here.
   frameBuffer.current.push(base64MouthData)
 
