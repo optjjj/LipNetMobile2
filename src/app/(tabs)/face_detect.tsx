@@ -191,7 +191,12 @@ const insets = useSafeAreaInsets()
         // })
         runOnJS(saveFrameBuffer)(croppedResult);
       }
-    } finally{
+
+
+    } catch(e){
+      console.log("WORKLET ERROR: ", e)
+    }
+      finally{
       frame.dispose()
     }
   }
