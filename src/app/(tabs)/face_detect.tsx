@@ -222,7 +222,7 @@ const saveFrameBuffer = (base64MouthData: any) => {
   console.log("Saving to Buffer...")
   frameBuffer.current.push(base64MouthData)
   console.log("Successfully Saved to frameBuffer!")
-  console.log("frameBuffer's length is now: ",  {frameBuffer.current.length})
+  console.log("frameBuffer's length is now: ", frameBuffer.current.length)
 
   progressRef.current?.updateCount(frameBuffer.current.length)
 
