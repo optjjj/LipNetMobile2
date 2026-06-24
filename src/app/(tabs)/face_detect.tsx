@@ -157,6 +157,31 @@ const insets = useSafeAreaInsets()
   const videoOutput = useVideoOutput({
     targetResolution: {width: 1280, height:720}
   })
+  const frameOutput = useFrameOutput({
+  pixelFormat: 'yuv',
+  onFrame: (frame) => {
+    'worklet';
+
+    try {
+      if (isCapturing.value === true && mouthW.value > 0){
+        const croppedMouth = resize(frame, {
+          scale: {width: 128, height: 64},
+          crop: {
+            x: mouthX.value,
+            y: mouthY.value,
+            width: mouthW.value,
+            height: mouthH.value
+          },
+          pixelFormat: 'rgb',
+          dataType: 'base64'
+        })
+        runOnJS(saveFrameBuffer)(croppedMouth);
+      }
+    } finally{
+      frame.dispose()
+    }
+  }
+})
   //
   // vision camera ref
   //
@@ -416,31 +441,7 @@ const saveFrameBuffer = (base64MouthData: string) => {
         }
     }
 
-const frameOutput = useFrameOutput({
-  pixelFormat: 'yuv',
-  onFrame: (frame) => {
-    'worklet';
 
-    try {
-      if (isCapturing.value === true && mouthW.value > 0){
-        const croppedMouth = resize(frame, {
-          scale: {width: 128, height: 64},
-          crop: {
-            x: mouthX.value,
-            y: mouthY.value,
-            width: mouthW.value,
-            height: mouthH.value
-          },
-          pixelFormat: 'rgb',
-          dataType: 'base64'
-        })
-        runOnJS(saveFrameBuffer)(croppedMouth);
-      }
-    } finally{
-      frame.dispose()
-    }
-  }
-})
 
 
 
