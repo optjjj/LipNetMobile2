@@ -15,6 +15,7 @@ import {
 } from 'react-native'
 import {
   CameraPosition,
+  Camera,
   CameraRef,
   useCameraDevice,
   useCameraPermission,
@@ -26,7 +27,7 @@ import {
   useSafeAreaInsets
 } from 'react-native-safe-area-context'
 import {
-  Camera,
+  //Camera,
   Face,
   FaceDetectorOptions,
 } from 'react-native-vision-camera-face-detector'
@@ -510,10 +511,10 @@ const saveFrameBuffer = (base64MouthData: any) => {
             device={ cameraDevice }
             orientationSource={ 'device' }
             onError={ handleCameraMountError }
-            onFacesDetected={ handleFacesDetected }
-            { ...faceDetectorOptions }
-            autoMode={ true }
-            cameraFacing={ 'front' }
+            //onFacesDetected={ handleFacesDetected }
+            //{ ...faceDetectorOptions }
+            //autoMode={ true }
+            //cameraFacing={ 'front' }
           
           />
         <View style = {styles.container}>
