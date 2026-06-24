@@ -164,7 +164,7 @@ const insets = useSafeAreaInsets()
     try {
       if (isCapturing.value === true && mouthX.value > 0){
 
-
+        console.log("capturing...")
         const croppedMouth = {
           left: mouthX.value,
           top: mouthY.value,
