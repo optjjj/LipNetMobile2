@@ -42,6 +42,7 @@ import Animated, {
 import {Canvas, Points, vec} from '@shopify/react-native-skia'
 import { ResizePlugin, useResizePlugin } from 'vision-camera-resize-plugin'
 import { runOnJS } from 'react-native-worklets'
+import {crop} from 'vision-camera-cropper'
 
 
 type StateMachine = 
@@ -166,18 +167,33 @@ const insets = useSafeAreaInsets()
 
     try {
       if (isCapturing.value === true && mouthW.value > 0){
-        const croppedMouth = resize(frame, {
-          scale: {width: 128, height: 64},
-          crop: {
-            x: mouthX.value,
-            y: mouthY.value,
-            width: mouthW.value,
-            height: mouthH.value
-          },
-          pixelFormat: 'rgb',
-          dataType: 'uint8'
+
+
+        const croppedMouth = {
+          left: mouthX.value,
+          top: mouthY.value,
+          width: mouthH.value,
+          height: mouthW.value
+        }
+
+        const croppedResult = crop(frame, {
+          cropRegion: croppedMouth,
+          includeImageBase64: true,
         })
-        runOnJS(saveFrameBuffer)(croppedMouth);
+
+
+        // const croppedMouth = resize(frame, {
+        //   scale: {width: 128, height: 64},
+        //   crop: {
+        //     x: mouthX.value,
+        //     y: mouthY.value,
+        //     width: mouthW.value,
+        //     height: mouthH.value
+        //   },
+        //   pixelFormat: 'rgb',
+        //   dataType: 'uint8'
+        // })
+        runOnJS(saveFrameBuffer)(croppedResult);
       }
     } finally{
       frame.dispose()
@@ -204,7 +220,7 @@ const insets = useSafeAreaInsets()
   const tiltAmount = useSharedValue(0)
 
   
-const saveFrameBuffer = (base64MouthData: Uint8Array) => {
+const saveFrameBuffer = (base64MouthData: any) => {
   // Implement frame buffer saving logic here.
   frameBuffer.current.push(base64MouthData)
 

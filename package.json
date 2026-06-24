@@ -45,6 +45,7 @@
     "react-native-worklets": "0.8.3",
     "react-native-worklets-core": "^1.6.3",
     "vector-icons": "^0.1.0",
+    "vision-camera-cropper": "^2.0.0",
     "vision-camera-resize-plugin": "^3.2.0"
   },
   "devDependencies": {
