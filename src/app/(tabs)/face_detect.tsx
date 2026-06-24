@@ -92,7 +92,7 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
   )
 })
 
-const isCapturing = useSharedValue<boolean>(false);
+
 
 
 
@@ -102,6 +102,7 @@ const insets = useSafeAreaInsets()
     width,
     height
   } = useWindowDimensions()
+  const isCapturing = useSharedValue<boolean>(false);
   const [appState, setAppState] = useState<StateMachine>('idle');
   const frameBuffer = useRef<any[]>([])
   const progressRef = useRef<ProgressBarRef>(null);
@@ -135,6 +136,7 @@ const insets = useSafeAreaInsets()
     windowHeight: height
   } ).current
   
+
     const buttonProps = () => {
     switch (appState) {
       case 'idle': return { text: 'Start Capture', onPress: handleStartCapture };
