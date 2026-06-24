@@ -237,10 +237,12 @@ const saveFrameBuffer = (base64MouthData: any) => {
     if (appState !== 'idle' && appState !== 'done') return;
     isCapturing.value = true;
     setAppState('capturing');
+    console.log("Starting capturing state...")
   };
 
   const handleStopCapture = () => {
     if (appState !== 'capturing') return;
+    console.log("Exiting Capturing")
     isCapturing.value = false
     frameBuffer.current = []
     progressRef.current?.updateCount(0)
