@@ -161,7 +161,7 @@ const insets = useSafeAreaInsets()
     'worklet';
 
     try {
-      if (isCapturing.value === true && mouthW.value > 0){
+      if (isCapturing.value === true){
 
 
         const croppedMouth = {
@@ -188,6 +188,8 @@ const insets = useSafeAreaInsets()
         //   pixelFormat: 'rgb',
         //   dataType: 'uint8'
         // })
+
+        console.log("Frame cropped, saving to FrameBuffer")
         runOnJS(saveFrameBuffer)(croppedResult);
       }
     } finally{
@@ -217,7 +219,10 @@ const insets = useSafeAreaInsets()
   
 const saveFrameBuffer = (base64MouthData: any) => {
   // Implement frame buffer saving logic here.
+  console.log("Saving to Buffer...")
   frameBuffer.current.push(base64MouthData)
+  console.log("Successfully Saved to frameBuffer!")
+  console.log("frameBuffer's length is now: ",  {frameBuffer.current.length})
 
   progressRef.current?.updateCount(frameBuffer.current.length)
 
