@@ -195,7 +195,7 @@ const insets = useSafeAreaInsets()
         //   pixelFormat: 'rgb',
         //   dataType: 'uint8'
         // })
-        runOnJS(saveFrameBuffer)(croppedResult);
+        //runOnJS(saveFrameBuffer)(croppedResult);
 
       }
       
