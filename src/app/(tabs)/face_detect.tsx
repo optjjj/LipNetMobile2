@@ -40,7 +40,6 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import {Canvas, Points, vec} from '@shopify/react-native-skia'
-import { ResizePlugin, useResizePlugin } from 'vision-camera-resize-plugin'
 import { runOnJS, runOnUI} from 'react-native-worklets'
 import {crop} from 'vision-camera-cropper'
 
@@ -92,9 +91,6 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
     </View>
   )
 })
-
-
-const {resize} = useResizePlugin()
 
 
 export default function FaceDetectionScreen(): ReactNode {
