@@ -164,16 +164,34 @@ export default function FaceDetectionScreen(): ReactNode {
           return
         }
 
-
+        const screenWidth = frame.width
+        const screenHeight = frame.height
         const face     = detectedFaces[0]
         const contours = face.contours
-        const SCALE_FACTOR_X = 1 //width / frame.width;
-        const SCALE_FACTOR_Y = 1 //height / frame.height;
+        const frameWidth = frame.width; 
+        const frameHeight = frame.height;
+        const {bounds} = detectedFaces[0]
 
-        aFaceW.value = face.bounds.width * SCALE_FACTOR_X
-        aFaceH.value = face.bounds.height * SCALE_FACTOR_Y
-        aFaceX.value = face.bounds.x * SCALE_FACTOR_X
-        aFaceY.value = face.bounds.y * SCALE_FACTOR_Y
+          // 1. UNIFORM SCALING: Scale by the largest ratio to match the 'cover' behavior
+          const scale = Math.max(screenWidth / frameWidth, screenHeight / frameHeight);
+
+          // 2. CALCULATE OFFSETS: Find how much of the raw frame was cropped off the screen
+          const xOffset = ((frameWidth * scale) - screenWidth) / 2;
+          const yOffset = ((frameHeight * scale) - screenHeight) / 2;
+
+          // 3. SCALE THE BOX DIMENSIONS
+          const boxWidth = bounds.width * scale;
+          const boxHeight = bounds.height * scale;
+
+          // 4. THE X-AXIS MIRROR FLIP (Crucial for Front Cameras)
+          // We subtract the scaled X from the total scaled frame width, then subtract the box width
+          const mirroredX = (frameWidth * scale) - (bounds.x * scale) - boxWidth;
+
+          // 5. APPLY OFFSETS TO FINAL UI VALUES
+          aFaceX.value = mirroredX - xOffset;
+          aFaceY.value = (bounds.y * scale) - yOffset;
+          aFaceW.value = boxWidth;
+          aFaceH.value = boxHeight;
 
         if (!contours) {
           mouthW.value = 0; mouthH.value = 0
@@ -197,7 +215,8 @@ export default function FaceDetectionScreen(): ReactNode {
           ...LOWER_LIP_TOP,
           ...LOWER_LIP_BOTTOM
         ]
-
+        const SCALE_FACTOR_X = 1
+        const SCALE_FACTOR_Y = 1
 
         const X_OFFSET     = 0 //(width * SCALE_FACTOR - width) / 2
         const Y_CORRECTION = 0
