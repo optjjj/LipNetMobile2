@@ -15,7 +15,6 @@ import {
 } from 'react-native'
 import {
   CameraPosition,
-  Camera,
   CameraRef,
   useCameraDevice,
   useCameraPermission,
@@ -27,7 +26,7 @@ import {
   useSafeAreaInsets
 } from 'react-native-safe-area-context'
 import {
-  //Camera,
+  Camera,
   Face,
   FaceDetectorOptions,
 } from 'react-native-vision-camera-face-detector'
