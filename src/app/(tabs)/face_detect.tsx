@@ -167,7 +167,7 @@ const insets = useSafeAreaInsets()
 
     try {
       runOnJS(logPulse)();
-      if (isCapturing.value === true && mouthW.value > 0){
+      if (isCapturing.value === true){
 
 
         const croppedMouth = {
@@ -520,7 +520,7 @@ const saveFrameBuffer = (base64MouthData: any) => {
           <Camera
             ref={ camera }
             style={ StyleSheet.absoluteFill }
-            outputs = {[videoOutput, frameOutput]}
+            outputs = {[frameOutput, videoOutput]}
             constraints={[
               {resolutionBias: videoOutput},
               {binned: true},
