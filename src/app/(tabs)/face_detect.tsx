@@ -413,10 +413,15 @@ const saveFrameBuffer = (base64MouthData: any) => {
     detectedFaces: Face[]
   ): void {
     if (detectedFaces.length > 0){
-        faces.value = detectedFaces
-    }
-    else{
-      faces.value.length = 0
+    const face = detectedFaces[0];
+    faces.value = [{
+      bounds:{
+        x: face.bounds.x,
+        y: face.bounds.y,
+        width: face.bounds.width,
+        height: face.bounds.height
+      }
+    }] as Face[];
     }
 
     //console.log( 'handleFacesDetected - detected', faces.value.length, 'faces' )
