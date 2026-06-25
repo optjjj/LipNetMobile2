@@ -19,6 +19,7 @@ import {
   useCameraDevice,
   useCameraPermission,
   useVideoOutput,
+  Frame,
   useFrameOutput
 } from 'react-native-vision-camera'
 import {
@@ -29,16 +30,18 @@ import {
   Camera,
   Face,
   FaceDetectorOptions,
+  
 } from 'react-native-vision-camera-face-detector'
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
-  withTiming
+  withTiming,
 } from 'react-native-reanimated'
 
 import {Canvas, Points, vec} from '@shopify/react-native-skia'
-import { useRunOnJS } from 'react-native-worklets-core'
+import { ResizePlugin, useResizePlugin } from 'vision-camera-resize-plugin'
+import { runOnJS, runOnUI} from 'react-native-worklets'
 import {crop} from 'vision-camera-cropper'
 
 
@@ -90,6 +93,10 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
   )
 })
 
+
+const {resize} = useResizePlugin()
+
+
 export default function FaceDetectionScreen(): ReactNode {
 const insets = useSafeAreaInsets()
   const {
@@ -120,6 +127,10 @@ const insets = useSafeAreaInsets()
     cameraFacing,
     setCameraFacing
   ] = useState<Extract<CameraPosition, 'front' | 'back'>>( 'front' )
+
+  const logPulse = () => {
+    console.log("Worklet Working!")
+  }
   
   const faceDetectorOptions = useRef<FaceDetectorOptions>( {
     performanceMode: 'fast',
@@ -153,32 +164,15 @@ const insets = useSafeAreaInsets()
   const videoOutput = useVideoOutput({
     targetResolution: {width: 1280, height:720}
   })
-const saveFrameBuffer = (base64MouthData: any) => {
-  // Implement frame buffer saving logic here.
-  console.log("Saving to Buffer...")
-  frameBuffer.current.push(base64MouthData)
-  console.log("Successfully Saved to frameBuffer!")
-  console.log("frameBuffer's length is now: ", frameBuffer.current.length)
-
-  progressRef.current?.updateCount(frameBuffer.current.length)
-
-  if (frameBuffer.current.length === 75) { // end recording phase
-    console.log("75 Frames Captured")
-    isCapturing.value = false
-    setAppState('inferencing')
-  }
-
-}
-  const runSaveFrameBuffer = useRunOnJS(saveFrameBuffer, []);
   const frameOutput = useFrameOutput({
   pixelFormat: 'yuv',
   onFrame: (frame) => {
     'worklet';
-    console.log("worklet is being activated...")
-    try {
-      if (isCapturing.value === true && mouthX.value > 0){
 
-        console.log("capturing...")
+    try {
+      if (isCapturing.value === true && mouthW.value > 0){
+
+
         const croppedMouth = {
           left: mouthX.value,
           top: mouthY.value,
@@ -203,14 +197,10 @@ const saveFrameBuffer = (base64MouthData: any) => {
         //   pixelFormat: 'rgb',
         //   dataType: 'uint8'
         // })
-        runSaveFrameBuffer(croppedResult)
+        runOnJS(saveFrameBuffer)(croppedResult);
+        runOnJS(logPulse)();
       }
-
-
-    } catch(e){
-      console.log("WORKLET ERROR: ", e)
-    }
-      finally{
+    } finally{
       frame.dispose()
     }
   }
@@ -235,18 +225,28 @@ const saveFrameBuffer = (base64MouthData: any) => {
   const tiltAmount = useSharedValue(0)
 
   
+const saveFrameBuffer = (base64MouthData: any) => {
+  // Implement frame buffer saving logic here.
+  frameBuffer.current.push(base64MouthData)
 
+  progressRef.current?.updateCount(frameBuffer.current.length)
+
+  if (frameBuffer.current.length === 75) { // end recording phase
+    console.log("75 Frames Captured")
+    isCapturing.value = false
+    setAppState('inferencing')
+  }
+
+}
 
   const handleStartCapture = () => {
     if (appState !== 'idle' && appState !== 'done') return;
-    isCapturing.value = true;
+    isCapturing.value = true
     setAppState('capturing');
-    console.log("Starting capturing state...")
   };
 
   const handleStopCapture = () => {
     if (appState !== 'capturing') return;
-    console.log("Exiting Capturing")
     isCapturing.value = false
     frameBuffer.current = []
     progressRef.current?.updateCount(0)
@@ -450,6 +450,29 @@ const saveFrameBuffer = (base64MouthData: any) => {
     aFaceH.value = height
     aFaceX.value = x
     aFaceY.value = y
+
+
+    // if (appState === 'capturing'){
+    //   // Use runOnJS to log from a worklet safely to the JS thread
+    //   const _logFromJS = (msg: string) => {
+    //     console.log(msg)
+    //   }
+
+    //   const _logWorklet = () => {
+    //     'worklet';
+    //     // runOnJS is required to invoke JS functions from a worklet
+    //     // so that logging and other JS-side effects run on the JS thread
+    //     runOnJS(_logFromJS)('Worklet running from inside handleFacesDetected!')
+    //   }
+
+    //   _logWorklet()
+    // }
+
+
+
+
+
+
 
     const saveFrame = (croppedData: any) => {
       frameBuffer.current.push(croppedData)
