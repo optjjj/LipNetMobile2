@@ -207,7 +207,7 @@ export default function FaceDetectionScreen(): ReactNode {
         tiltAmount.value = Math.atan2(
           rightMost.y - leftMost.y,
           rightMost.x - leftMost.x
-        ) * 0.75
+        ) * -0.75
 
         // Mouth crop region
         const topCenter    = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
