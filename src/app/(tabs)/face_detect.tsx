@@ -166,6 +166,7 @@ const insets = useSafeAreaInsets()
     'worklet';
 
     try {
+      runOnJS(logPulse)();
       if (isCapturing.value === true && mouthW.value > 0){
 
 
@@ -194,7 +195,7 @@ const insets = useSafeAreaInsets()
         //   dataType: 'uint8'
         // })
         runOnJS(saveFrameBuffer)(croppedResult);
-        runOnJS(logPulse)();
+
       }
     } finally{
       frame.dispose()
