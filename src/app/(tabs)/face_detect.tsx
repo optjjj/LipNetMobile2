@@ -195,9 +195,9 @@ export default function FaceDetectionScreen(): ReactNode {
           ...LOWER_LIP_BOTTOM
         ]
 
-        const SCALE_FACTOR = 1.65
+        const SCALE_FACTOR = 1
         const X_OFFSET     = (width * SCALE_FACTOR - width) / 2
-        const Y_CORRECTION = 40
+        const Y_CORRECTION = 0
         const LIP_NET_W    = 128
         const LIP_NET_H    = 64
 
