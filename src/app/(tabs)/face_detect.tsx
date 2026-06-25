@@ -195,7 +195,8 @@ export default function FaceDetectionScreen(): ReactNode {
           ...LOWER_LIP_BOTTOM
         ]
 
-        const SCALE_FACTOR = 1
+        const SCALE_FACTOR_X = frame.width / width;
+        const SCALE_FACTOR_Y = frame.height / height;
         const X_OFFSET     = 0 //(width * SCALE_FACTOR - width) / 2
         const Y_CORRECTION = 40
         const LIP_NET_W    = 128
@@ -212,8 +213,8 @@ export default function FaceDetectionScreen(): ReactNode {
         // Mouth crop region
         const topCenter    = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
         const bottomCenter = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
-        const lipCenterX   = (topCenter.x + bottomCenter.x) / 2 * SCALE_FACTOR
-        const lipCenterY   = (topCenter.y + bottomCenter.y) / 2
+        const lipCenterX   = (topCenter.x + bottomCenter.x) / 2 * SCALE_FACTOR_X
+        const lipCenterY   = (topCenter.y + bottomCenter.y) / 2 * SCALE_FACTOR_Y
 
         mouthH.value = LIP_NET_W
         mouthW.value = LIP_NET_H
@@ -222,8 +223,8 @@ export default function FaceDetectionScreen(): ReactNode {
 
         // Lip mesh points for Skia overlay
         lipPoints.value = allLipPoints.map(p => ({
-          x: p.x * SCALE_FACTOR - X_OFFSET,
-          y: p.y - Y_CORRECTION
+          x: p.x * SCALE_FACTOR_X - X_OFFSET,
+          y: p.y * SCALE_FACTOR_Y - Y_CORRECTION
         }))
 
         // Frame capture
