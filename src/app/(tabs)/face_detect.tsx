@@ -213,10 +213,10 @@ export default function FaceDetectionScreen(): ReactNode {
         ) * -0.75
 
         // Mouth crop region
-        const topCenter    = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
+        const topCenter    = (UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)])
         const bottomCenter = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
-        const lipCenterX   = (topCenter.x + bottomCenter.x) / 2 * SCALE_FACTOR_X
-        const lipCenterY   = (topCenter.y + bottomCenter.y) / 2 * SCALE_FACTOR_Y
+        const lipCenterX   = ((topCenter.x + bottomCenter.x) / 2) * SCALE_FACTOR_X
+        const lipCenterY   = ((topCenter.y + bottomCenter.y) / 2) * SCALE_FACTOR_Y
 
         mouthH.value = LIP_NET_W
         mouthW.value = LIP_NET_H
