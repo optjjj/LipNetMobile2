@@ -167,8 +167,8 @@ export default function FaceDetectionScreen(): ReactNode {
 
         const face     = detectedFaces[0]
         const contours = face.contours
-        const SCALE_FACTOR_X = width / frame.width;
-        const SCALE_FACTOR_Y = height / frame.height;
+        const SCALE_FACTOR_X = 1 //width / frame.width;
+        const SCALE_FACTOR_Y = 1 //height / frame.height;
 
         aFaceW.value = face.bounds.width * SCALE_FACTOR_X
         aFaceH.value = face.bounds.height * SCALE_FACTOR_Y
