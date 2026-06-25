@@ -412,7 +412,13 @@ const saveFrameBuffer = (base64MouthData: any) => {
   function handleFacesDetected(
     detectedFaces: Face[]
   ): void {
-    faces.value = detectedFaces
+    if (detectedFaces.length > 0){
+        faces.value = detectedFaces
+    }
+    else{
+      faces.value.length = 0
+    }
+
     //console.log( 'handleFacesDetected - detected', faces.value.length, 'faces' )
 
     // if no faces are detected we do nothing
