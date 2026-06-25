@@ -511,10 +511,10 @@ const saveFrameBuffer = (base64MouthData: any) => {
             device={ cameraDevice }
             orientationSource={ 'device' }
             onError={ handleCameraMountError }
-            //onFacesDetected={ handleFacesDetected }
-            //{ ...faceDetectorOptions }
-            //autoMode={ true }
-            //cameraFacing={ 'front' }
+            onFacesDetected={ handleFacesDetected }
+            { ...faceDetectorOptions }
+            autoMode={ true }
+            cameraFacing={ 'front' }
           
           />
         <View style = {styles.container}>
