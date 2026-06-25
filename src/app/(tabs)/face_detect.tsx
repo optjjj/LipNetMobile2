@@ -164,13 +164,16 @@ export default function FaceDetectionScreen(): ReactNode {
           return
         }
 
+
         const face     = detectedFaces[0]
         const contours = face.contours
+        const SCALE_FACTOR_X = width / frame.width;
+        const SCALE_FACTOR_Y = height / frame.height;
 
-        aFaceW.value = face.bounds.width
-        aFaceH.value = face.bounds.height
-        aFaceX.value = face.bounds.x
-        aFaceY.value = face.bounds.y
+        aFaceW.value = face.bounds.width * SCALE_FACTOR_X
+        aFaceH.value = face.bounds.height * SCALE_FACTOR_Y
+        aFaceX.value = face.bounds.x * SCALE_FACTOR_X
+        aFaceY.value = face.bounds.y * SCALE_FACTOR_Y
 
         if (!contours) {
           mouthW.value = 0; mouthH.value = 0
@@ -195,10 +198,9 @@ export default function FaceDetectionScreen(): ReactNode {
           ...LOWER_LIP_BOTTOM
         ]
 
-        const SCALE_FACTOR_X = frame.width / width;
-        const SCALE_FACTOR_Y = frame.height / height;
+
         const X_OFFSET     = 0 //(width * SCALE_FACTOR - width) / 2
-        const Y_CORRECTION = 40
+        const Y_CORRECTION = 0
         const LIP_NET_W    = 128
         const LIP_NET_H    = 64
 
