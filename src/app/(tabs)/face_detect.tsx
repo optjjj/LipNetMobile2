@@ -164,8 +164,8 @@ export default function FaceDetectionScreen(): ReactNode {
           return
         }
 
-        const screenWidth = frame.width
-        const screenHeight = frame.height
+        const screenWidth = 1280
+        const screenHeight = 720
         const face     = detectedFaces[0]
         const contours = face.contours
         const frameWidth = frame.width; 
