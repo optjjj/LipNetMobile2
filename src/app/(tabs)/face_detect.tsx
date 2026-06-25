@@ -35,12 +35,11 @@ import {
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
-  useSharedValue,
   withTiming,
 } from 'react-native-reanimated'
 
 import {Canvas, Points, vec} from '@shopify/react-native-skia'
-import { runOnJS, runOnUI} from 'react-native-worklets'
+import { useRunOnJS, useSharedValue} from 'react-native-worklets-core'
 import {crop} from 'vision-camera-cropper'
 
 
@@ -100,6 +99,7 @@ const insets = useSafeAreaInsets()
     height
   } = useWindowDimensions()
   const isCapturing = useSharedValue<boolean>(false);
+  const safeLogPulse = useRunOnJS(() => console.log("worklet is working!!"), []);
   const [appState, setAppState] = useState<StateMachine>('idle');
   const frameBuffer = useRef<any[]>([])
   const progressRef = useRef<ProgressBarRef>(null);
@@ -167,7 +167,7 @@ const insets = useSafeAreaInsets()
     'worklet';
 
     try {
-      runOnJS(logPulse)();
+      safeLogPulse();
       if (isCapturing.value === true){
 
 
@@ -198,6 +198,7 @@ const insets = useSafeAreaInsets()
         runOnJS(saveFrameBuffer)(croppedResult);
 
       }
+      
     } finally{
       frame.dispose()
     }
