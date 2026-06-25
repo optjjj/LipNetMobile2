@@ -162,6 +162,7 @@ const insets = useSafeAreaInsets()
   })
   const frameOutput = useFrameOutput({
   pixelFormat: 'yuv',
+  enablePreviewSizedOutputBuffers: true,
   onFrame: (frame) => {
     'worklet';
 
