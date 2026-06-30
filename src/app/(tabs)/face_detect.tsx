@@ -527,7 +527,10 @@ const saveFrameBuffer = (base64MouthData: any) => {
           justifyContent: 'center'
         }
       ] }
+
+      // If camera permissions are allowed --------------------
     >
+      
       { hasPermission && cameraDevice ? <>
         { cameraMounted && <>
           <Camera
@@ -560,12 +563,12 @@ const saveFrameBuffer = (base64MouthData: any) => {
       </View>
       </View>
 
-          <Animated.View
+          {/* <Animated.View
             style={ boundingBoxStyle}
           />
           <Animated.View
             style = {lipBoxStyle}
-          />
+          /> */}
 
           <Canvas style = {StyleSheet.absoluteFill} pointerEvents='none'>
             <Points
