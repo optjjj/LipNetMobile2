@@ -23,14 +23,14 @@ import {
     useVideoOutput,
     Frame,
     useFrameOutput,
-    useCamera
+    useCamera,
+    Camera
 } from 'react-native-vision-camera'
 import {
     SafeAreaProvider,
     useSafeAreaInsets
 } from 'react-native-safe-area-context'
 import {
-    Camera,
     Face,
     FaceDetectorOptions,
     useFaceDetector
@@ -41,12 +41,10 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated'
 import {
-    Canvas,
-    Points,
-    vec,
     Skia,
-    useSkiaFrameProcessor,
-    StrokeCap
+    StrokeCap,
+    Canvas,
+    Points
 } from '@shopify/react-native-skia'
 import {
     useRunOnJS,
@@ -226,7 +224,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
     export const LipPoints(contours) {
         'worklet'
-        
+
         if (!contours) return null;
 
         const {
@@ -287,7 +285,7 @@ export default function FaceDetectionScreen(): ReactNode {
                     height: LipNetHeight,
                     x: mouthX.value,
                     y: mouthY.value
-                }, 
+                },
                 tilt: tiltAmount
             }
 
@@ -297,60 +295,64 @@ export default function FaceDetectionScreen(): ReactNode {
             //     return vec(centeredX, (p.y - Y_CORRECTION))
             // })
         }
+    }
 
 
-        const frameProcessor = useSkiaFrameProcessor((frame) => {
-            'worklet'
-            // ---- Detects faces and isolates contours ---- 
-            const FaceDetector = useFaceDetector()
-            const faces = FaceDetector.detectFaces(frame);
-
-            if (faces.values.length === 0) return
-
-            const contours = faces.values[0];
-            if (!contours) return []
-
-            // ---- Calls LipPoints to find face, mouth, and lips ----
-
-            const LipReader = LipPoints(contours)
-
-            const {
-                width,
-                height,
-                x,
-                y,
-            } = LipReader.boundingBox
-
-            frame.render()
-
-
-            // Skia Face Rectangle Draw
-
-            const faceRect = Skia.XYWHRect(x, y, width, height)
-            const facePaint = Skia.Paint()
-            facePaint.setColor(Skia.Color('red'))
-            frame.drawRect(faceRect, facePaint)
-
-            // Skia Mouth Rectangle Draw
-
-            const mouthRect = Skia.XYWHRect(mouthX.value, mouthY.value, mouthH.value, mouthW.value)
-            const mouthPaint = Skia.Paint()
-            mouthPaint.setColor(Skia.Color('green'))
-            frame.drawRect(mouthRect, mouthPaint)
-
-            // Skia Lip Circle Draw
-
-            const lipPaint = Skia.Paint()
-            lipPaint.setColor(Skia.Color('magneta'))
-            lipPaint.setStrokeWidth(4)
-            lipPaint.setStrokeCap(StrokeCap.Round)
-            for (let i = 0; i < LipPoints.length; i++){
-                const p = LipReader.points[i];
-                frame.drawCircle(p.x, p.y, 2, lipPaint);
-            }
-
+    const frameProcessor = useFrameOutput({
+        onFrame: (frame) => {
             
-        }, [])
+        'worklet'
+        // ---- Detects faces and isolates contours ---- 
+        const FaceDetector = useFaceDetector(faceDetectorOptions)
+        const faces = FaceDetector.detectFaces(frame);
+
+        if (faces.length === 0) return
+
+        const contours = faces[0]?.contours
+        if (!contours) return
+
+        // ---- Calls LipPoints to find face, mouth, and lips ----
+
+        const LipReader = LipPoints(contours)
+        if (!LipReader) return
+
+        const {
+            width,
+            height,
+            x,
+            y,
+        } = LipReader.boundingBox
+
+        frame.render()
+
+
+        // Skia Face Rectangle Draw
+
+        const faceRect = Skia.XYWHRect(x, y, width, height)
+        const facePaint = Skia.Paint()
+        facePaint.setColor(Skia.Color('red'))
+        frame.drawRect(faceRect, facePaint)
+
+        // Skia Mouth Rectangle Draw
+
+        const mouthRect = Skia.XYWHRect(mouthX.value, mouthY.value, mouthH.value, mouthW.value)
+        const mouthPaint = Skia.Paint()
+        mouthPaint.setColor(Skia.Color('green'))
+        frame.drawRect(mouthRect, mouthPaint)
+
+        // Skia Lip Circle Draw
+
+        const lipPaint = Skia.Paint()
+        lipPaint.setColor(Skia.Color('magneta'))
+        lipPaint.setStrokeWidth(4)
+        lipPaint.setStrokeCap(StrokeCap.Round)
+        for (let i = 0; i < LipPoints.length; i++) {
+            const p = LipReader.points[i];
+            frame.drawCircle(p.x, p.y, 2, lipPaint);
+        }
+
+
+    }, [])
 
 
 
@@ -361,122 +363,115 @@ export default function FaceDetectionScreen(): ReactNode {
 
 
 
-        return(
-            <> {/* Wrapper that combines the UI and the main camera elements */}
-            
-            <View style = {[StyleSheet.absoluteFill, { {/* Main view, takes up the whole screen and aligns everything */}
-                                alignItems: 'center',
-                                justifyContent: 'center'   
-                                }
-                            ]}
-            >
-
-                {hasPermission && cameraDevice ? (<> {/* IF ELSE Statement */}
-                    <Camera {/** Camera Permission Granted */}
-                    ref = {camera}
-                    style = {StyleSheet.absoluteFill}
-                    constraints={[
-                        {resolutionBias: videoOutput},
-                        {binned: true},
-                        {fps: 25}
-                    ]}
-                    isActive = {true}
-                    device={cameraDevice}
-                    orientationSource='device'
-                    onError = {}
-                    autoMode = {true}
-                    cameraFacing='front'
-                    outputs = {[frameProcessor, videoOutput]}
-                    frameProcessor = {frameProcessor}
-
+    return (
+        <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+            {hasPermission && cameraDevice ? (
+                <>
+                    <Camera
+                        ref={camera}
+                        style={StyleSheet.absoluteFill}
+                        constraints={[{ resolutionBias: videoOutput }, { binned: true }, { fps: 25 }]}
+                        isActive={true}
+                        device={cameraDevice}
+                        orientationSource="device"
+                        onError={(e) => console.error(e)}
+                        //autoMode={true}
+                        //cameraFacing="front"
+                        outputs={[frameProcessor, videoOutput]}
+                        //frameProcessor={frameProcessor}
                     />
-                    <View style = {StyleSheet.container}>
-                        {appState === 'capturing' && (
-                            <FrameProgressBar ref = {progressRef} />
-                        )}
-                 
-                ): ( {/** Camera Permissions NOT Granted */}
 
-                )
+                    <View style={styles.container}>
+                        {appState === 'capturing' && <FrameProgressBar ref={progressRef} />}
 
-
-                }
-            </View>
-            </>
-        )
-    })
-
-
+                        <View style={styles.buttonContainer}>
+                            <Button title={buttonProps().text} onPress={buttonProps().onPress} />
+                        </View>
+                    </View>
+                </>
+            ) : (
+                <Text
+                    style={{
+                        width: '100%',
+                        backgroundColor: 'rgb(255,0,0)',
+                        textAlign: 'center',
+                        color: 'white',
+                    }}
+                >
+                    No camera device or permission
+                </Text>
+            )}
+        </View>
+    );
 }
-
 
 const styles = StyleSheet.create({
 
- // CAMERA STLYES
+    // CAMERA STLYES
 
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  message: {
-    textAlign: 'center',
-    paddingBottom: 10,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 60,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    width: '20%',
-    alignSelf: 'center',
-    borderRadius: 16,
-    paddingVertical: 10,
-    overflow: 'hidden',
-    zIndex: 10
-  },
-  button: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recordDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#cd5151',
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    message: {
+        textAlign: 'center',
+        paddingBottom: 10,
+    },
+    buttonContainer: {
+        position: 'absolute',
+        bottom: 60,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white',
+        width: '20%',
+        alignSelf: 'center',
+        borderRadius: 16,
+        paddingVertical: 10,
+        overflow: 'hidden',
+        zIndex: 10
+    },
+    button: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    recordDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#cd5151',
+        marginTop: 6,
+        marginBottom: 4,
+    },
+    text: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
+    },
 
-  // PROGRESS BAR STYLES
+    // PROGRESS BAR STYLES
 
-  progressContainer: {
-    position: 'absolute',
-    bottom: 10,
-    left: 0,
-    zIndex: 10,
-    backgroundColor: 'white',
-    width: '50%',
-    height: 40,
-    paddingTop: 4,
-  },
+    progressContainer: {
+        position: 'absolute',
+        bottom: 10,
+        left: 0,
+        zIndex: 10,
+        backgroundColor: 'white',
+        width: '50%',
+        height: 40,
+        paddingTop: 4,
+    },
 
-  progressText: {
-    position: 'absolute',
-    bottom: 10,
-    left: 0,
-    textAlign: 'center',
-    width: '100%',
-    fontSize: 12,
-    color: 'green',
-    zIndex: 10
-  }
+    progressText: {
+        position: 'absolute',
+        bottom: 10,
+        left: 0,
+        textAlign: 'center',
+        width: '100%',
+        fontSize: 12,
+        color: 'green',
+        zIndex: 10
+    }
 })

@@ -2,8 +2,8 @@ import React, {
   ReactNode,
   useEffect,
   useRef,
-  useState, 
-  forwardRef, 
+  useState,
+  forwardRef,
   useImperativeHandle
 } from 'react'
 import {
@@ -30,7 +30,7 @@ import {
   Camera,
   Face,
   FaceDetectorOptions,
-  
+
 } from 'react-native-vision-camera-face-detector'
 import Animated, {
   useAnimatedStyle,
@@ -38,13 +38,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 
-import {Canvas, Points, vec} from '@shopify/react-native-skia'
-import { useRunOnJS, useSharedValue} from 'react-native-worklets-core'
-import {crop} from 'vision-camera-cropper'
+import { Canvas, Points, vec } from '@shopify/react-native-skia'
+import { useRunOnJS, useSharedValue } from 'react-native-worklets-core'
+import { crop } from 'vision-camera-cropper'
 
 
-type StateMachine = 
-    'idle' // 0, camera is on and displaying preview, waiting for user to start recording
+type StateMachine =
+  'idle' // 0, camera is on and displaying preview, waiting for user to start recording
   | 'capturing' // 1, capturing frames, once 75 frames are reached, switch to intferencing state
   | 'inferencing' // 2, run SCRFD face & lip detection, once 75 valid frames, run LipNet interpretation, then switch to speaking state
   | 'speaking' // 3, display LipNet results and use text-to-speech to speak the results, once done, switch back to idle state
@@ -73,7 +73,7 @@ type StateMachine =
 
 
 
-export interface ProgressBarRef{
+export interface ProgressBarRef {
   updateCount: (count: number) => void;
 }
 
@@ -85,15 +85,15 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
   }))
 
   return (
-    <View style = {styles.progressContainer}>
-      <Text style = {styles.progressText}> Valid Frames: [{count}/75]</Text>
+    <View style={styles.progressContainer}>
+      <Text style={styles.progressText}> Valid Frames: [{count}/75]</Text>
     </View>
   )
 })
 
 
 export default function FaceDetectionScreen(): ReactNode {
-const insets = useSafeAreaInsets()
+  const insets = useSafeAreaInsets()
   const {
     width,
     height
@@ -110,133 +110,133 @@ const insets = useSafeAreaInsets()
   const [
     cameraMounted,
     setCameraMounted
-  ] = useState<boolean>( true )
+  ] = useState<boolean>(true)
   const [
     cameraPaused,
     setCameraPaused
-  ] = useState<boolean>( false )
+  ] = useState<boolean>(false)
   const [
     autoMode,
     setAutoMode
-  ] = useState<boolean>( true )
+  ] = useState<boolean>(true)
   const [
     cameraFacing,
     setCameraFacing
-  ] = useState<Extract<CameraPosition, 'front' | 'back'>>( 'front' )
+  ] = useState<Extract<CameraPosition, 'front' | 'back'>>('front')
 
   const logPulse = () => {
     console.log("Worklet Working!")
   }
-  
-  const faceDetectorOptions = useRef<FaceDetectorOptions>( {
+
+  const faceDetectorOptions = useRef<FaceDetectorOptions>({
     performanceMode: 'fast',
     runClassifications: false,
     runContours: true,
     runLandmarks: false,
     windowWidth: width,
     windowHeight: height
-  } ).current
-  
+  }).current
 
-    const buttonProps = () => {
+
+  const buttonProps = () => {
     switch (appState) {
       case 'idle': return { text: 'Start Capture', onPress: handleStartCapture };
       case 'capturing': return { text: 'Stop Capture', onPress: handleStopCapture };
-      case 'inferencing': return { text: 'Analyzing Lips...', onPress: handleRestart }; 
-      case 'speaking': return { text: 'Speaking...', onPress: handleRestart};
+      case 'inferencing': return { text: 'Analyzing Lips...', onPress: handleRestart };
+      case 'speaking': return { text: 'Speaking...', onPress: handleRestart };
       case 'done': return { text: 'Start Again', onPress: handleStartCapture };
-      default: return { text: 'Unknown', onPress: () => {} };
+      default: return { text: 'Unknown', onPress: () => { } };
     }
   };
-//   const isFocused = useIsFocused()
-//   const appState = useAppState()
-//   const isCameraActive = (
-//     !cameraPaused &&
-//     isFocused &&
-//     appState === 'active'
-//   )
-  const cameraDevice = useCameraDevice( cameraFacing )
+  //   const isFocused = useIsFocused()
+  //   const appState = useAppState()
+  //   const isCameraActive = (
+  //     !cameraPaused &&
+  //     isFocused &&
+  //     appState === 'active'
+  //   )
+  const cameraDevice = useCameraDevice(cameraFacing)
 
   const videoOutput = useVideoOutput({
-    targetResolution: {width: 1280, height:720}
+    targetResolution: { width: 1280, height: 720 }
   })
   const frameOutput = useFrameOutput({
-  pixelFormat: 'yuv',
-  enablePreviewSizedOutputBuffers: true,
-  onFrame: (frame) => {
-    'worklet';
+    pixelFormat: 'yuv',
+    enablePreviewSizedOutputBuffers: true,
+    onFrame: (frame) => {
+      'worklet';
 
-    try {
-      safeLogPulse();
-      if (isCapturing.value === true){
+      try {
+        safeLogPulse();
+        if (isCapturing.value === true) {
 
 
-        const croppedMouth = {
-          left: mouthX.value,
-          top: mouthY.value,
-          width: mouthH.value,
-          height: mouthW.value
+          const croppedMouth = {
+            left: mouthX.value,
+            top: mouthY.value,
+            width: mouthH.value,
+            height: mouthW.value
+          }
+
+          const croppedResult = crop(frame, {
+            cropRegion: croppedMouth,
+            includeImageBase64: true,
+          })
+
+
+          // const croppedMouth = resize(frame, {
+          //   scale: {width: 128, height: 64},
+          //   crop: {
+          //     x: mouthX.value,
+          //     y: mouthY.value,
+          //     width: mouthW.value,
+          //     height: mouthH.value
+          //   },
+          //   pixelFormat: 'rgb',
+          //   dataType: 'uint8'
+          // })
+          //runOnJS(saveFrameBuffer)(croppedResult);
+
         }
 
-        const croppedResult = crop(frame, {
-          cropRegion: croppedMouth,
-          includeImageBase64: true,
-        })
-
-
-        // const croppedMouth = resize(frame, {
-        //   scale: {width: 128, height: 64},
-        //   crop: {
-        //     x: mouthX.value,
-        //     y: mouthY.value,
-        //     width: mouthW.value,
-        //     height: mouthH.value
-        //   },
-        //   pixelFormat: 'rgb',
-        //   dataType: 'uint8'
-        // })
-        //runOnJS(saveFrameBuffer)(croppedResult);
-
+      } finally {
+        frame.dispose()
       }
-      
-    } finally{
-      frame.dispose()
     }
-  }
-})
+  })
   //
   // vision camera ref
   //
-  const camera = useRef<CameraRef>( null )
+  const camera = useRef<CameraRef>(null)
   //const { detectFaces } = useImageFaceDetector( faceDetectorOptions )
   //
   // face rectangle position
   //
-  const faces = useSharedValue<Face[]>( [] )
-  const aFaceW = useSharedValue( 0 )
-  const aFaceH = useSharedValue( 0 )
-  const aFaceX = useSharedValue( 0 )
-  const aFaceY = useSharedValue( 0 )
+  const faces = useSharedValue<Face[]>([])
+  const aFaceW = useSharedValue(0)
+  const aFaceH = useSharedValue(0)
+  const aFaceX = useSharedValue(0)
+  const aFaceY = useSharedValue(0)
   const mouthW = useSharedValue(0)
   const mouthH = useSharedValue(0)
   const mouthX = useSharedValue(0)
   const mouthY = useSharedValue(0)
   const tiltAmount = useSharedValue(0)
 
-  
-const saveFrameBuffer = (base64MouthData: any) => {
-  // Implement frame buffer saving logic here.
-  frameBuffer.current.push(base64MouthData)
 
-  progressRef.current?.updateCount(frameBuffer.current.length)
+  const saveFrameBuffer = (base64MouthData: any) => {
+    // Implement frame buffer saving logic here.
+    frameBuffer.current.push(base64MouthData)
 
-  if (frameBuffer.current.length === 75) { // end recording phase
-    console.log("75 Frames Captured")
-    isCapturing.value = false
-    setAppState('inferencing')
+    progressRef.current?.updateCount(frameBuffer.current.length)
+
+    if (frameBuffer.current.length === 75) { // end recording phase
+      console.log("75 Frames Captured")
+      isCapturing.value = false
+      setAppState('inferencing')
+    }
+
   }
-
-}
 
   const handleStartCapture = () => {
     if (appState !== 'idle' && appState !== 'done') return;
@@ -268,20 +268,20 @@ const saveFrameBuffer = (base64MouthData: any) => {
   }
 
 
-  const LipMeshPoints = useDerivedValue(()=>{
+  const LipMeshPoints = useDerivedValue(() => {
     if (faces.value.length === 0) return [];
 
     const contours = faces.value[0]?.contours;
     if (!contours) return [];
 
-    const{
+    const {
       UPPER_LIP_TOP,
       UPPER_LIP_BOTTOM,
       LOWER_LIP_TOP,
       LOWER_LIP_BOTTOM
-    } = contours as Record<string, {x:number; y:number}[]>;
+    } = contours as Record<string, { x: number; y: number }[]>;
 
-    if (UPPER_LIP_TOP?.length > 0 && LOWER_LIP_BOTTOM?.length > 0){
+    if (UPPER_LIP_TOP?.length > 0 && LOWER_LIP_BOTTOM?.length > 0) {
       const allLipPoints = [
         ...UPPER_LIP_TOP,
         ...UPPER_LIP_BOTTOM,
@@ -289,13 +289,13 @@ const saveFrameBuffer = (base64MouthData: any) => {
         ...LOWER_LIP_BOTTOM
       ]
       const SCALE_FACTOR = 1.65
-      const X_OFFSET = ((width * SCALE_FACTOR - width) / 2 )
+      const X_OFFSET = ((width * SCALE_FACTOR - width) / 2)
       const Y_CORRECTION = 40
 
       // LIP TILT CALCULATION
 
-      const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p:min, allLipPoints[0])
-      const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p:max, allLipPoints[0])
+      const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
+      const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
 
       tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
 
@@ -312,24 +312,24 @@ const saveFrameBuffer = (base64MouthData: any) => {
 
       mouthW.value = LipNetHeight
       mouthH.value = LipNetWidth
-      mouthX.value = LipCenterX - X_OFFSET - LipNetWidth/2 
-      mouthY.value = LipCenterY - Y_CORRECTION - LipNetHeight/2 
+      mouthX.value = LipCenterX - X_OFFSET - LipNetWidth / 2
+      mouthY.value = LipCenterY - Y_CORRECTION - LipNetHeight / 2
 
 
       // LIP CONTOUR DRAWING
 
-      return allLipPoints.map(p=>{
+      return allLipPoints.map(p => {
         const scaledX = p.x * SCALE_FACTOR
         const centeredX = scaledX - X_OFFSET
-        return vec(centeredX, (p.y-Y_CORRECTION))
+        return vec(centeredX, (p.y - Y_CORRECTION))
       })
-    }    
+    }
     return []
   })
 
 
 
-  const boundingBoxStyle = useAnimatedStyle( () => ( { // face box
+  const boundingBoxStyle = useAnimatedStyle(() => ({ // face box
     position: 'absolute',
     borderWidth: 4,
     borderLeftColor: 'rgb(0,255,0)',
@@ -353,9 +353,9 @@ const saveFrameBuffer = (base64MouthData: any) => {
     // top: withTiming( aFaceY.value, {
     //   duration: 100
     // } )
-  } ) )
+  }))
 
-  const lipBoxStyle = useAnimatedStyle (() =>({ // lip box
+  const lipBoxStyle = useAnimatedStyle(() => ({ // lip box
     position: 'absolute',
     borderWidth: 4,
     borderLeftColor: 'rgb(255, 0, 0)',
@@ -381,16 +381,16 @@ const saveFrameBuffer = (base64MouthData: any) => {
     //   duration: 100
     // } ),
     transform: [
-      {rotateZ: `${tiltAmount.value}rad`,}
-    ] 
+      { rotateZ: `${tiltAmount.value}rad`, }
+    ]
 
   }))
 
-    useEffect(() =>{
-        if (!hasPermission){
-            requestPermission()
-        }
-    }, [hasPermission])
+  useEffect(() => {
+    if (!hasPermission) {
+      requestPermission()
+    }
+  }, [hasPermission])
 
   /**
    * Hanldes camera mount error event
@@ -400,7 +400,7 @@ const saveFrameBuffer = (base64MouthData: any) => {
   function handleCameraMountError(
     error: any
   ) {
-    console.error( 'camera mount error', error )
+    console.error('camera mount error', error)
   }
 
   /**
@@ -412,22 +412,22 @@ const saveFrameBuffer = (base64MouthData: any) => {
   function handleFacesDetected(
     detectedFaces: Face[]
   ): void {
-    if (detectedFaces.length > 0){
-    const face = detectedFaces[0];
-    faces.value = [{
-      bounds:{
-        x: face.bounds.x,
-        y: face.bounds.y,
-        width: face.bounds.width,
-        height: face.bounds.height
-      }
-    }] as Face[];
+    if (detectedFaces.length > 0) {
+      const face = detectedFaces[0];
+      faces.value = [{
+        bounds: {
+          x: face.bounds.x,
+          y: face.bounds.y,
+          width: face.bounds.width,
+          height: face.bounds.height
+        }
+      }] as Face[];
     }
 
     //console.log( 'handleFacesDetected - detected', faces.value.length, 'faces' )
 
     // if no faces are detected we do nothing
-    if ( faces.value.length <= 0 ) {
+    if (faces.value.length <= 0) {
       aFaceW.value = 0
       aFaceH.value = 0
       aFaceX.value = 0
@@ -435,20 +435,20 @@ const saveFrameBuffer = (base64MouthData: any) => {
       mouthH.value = 0
       mouthW.value = 0
       mouthX.value = 0
-      mouthY.value = 0  
+      mouthY.value = 0
       return
     }
 
-    const { bounds } = faces.value[ 0 ]
+    const { bounds } = faces.value[0]
     const {
       width,
       height,
       x,
-      y, 
+      y,
     } = bounds
     const { contours } = faces.value[0]
 
-    if (!contours){
+    if (!contours) {
       mouthH.value = 0;
       mouthW.value = 0;
       mouthX.value = 0;
@@ -487,14 +487,14 @@ const saveFrameBuffer = (base64MouthData: any) => {
     const saveFrame = (croppedData: any) => {
       frameBuffer.current.push(croppedData)
 
-  
-        progressRef.current?.updateCount(frameBuffer.current.length)
-      
-        if (frameBuffer.current.length === 75){
-          console.log("75 Frames Captured!")
-          isCapturing.value = false
-          setAppState('inferencing')
-        }
+
+      progressRef.current?.updateCount(frameBuffer.current.length)
+
+      if (frameBuffer.current.length === 75) {
+        console.log("75 Frames Captured!")
+        isCapturing.value = false
+        setAppState('inferencing')
+      }
     }
 
 
@@ -506,7 +506,7 @@ const saveFrameBuffer = (base64MouthData: any) => {
     //   const croppedFrameData = 1
     //   frameBuffer.current.push(croppedFrameData)
     //   //const croppedFrameData = extractPixels(frame, mouthBox)
-      
+
     //   progressRef.current?.updateCount(frameBuffer.current.length);
 
 
@@ -516,52 +516,52 @@ const saveFrameBuffer = (base64MouthData: any) => {
     //     setAppState('inferencing')
     //   }
     // }
-      // send frameBuffer to LipNet, then clear it
+    // send frameBuffer to LipNet, then clear it
 
   }
-  return ( <>
+  return (<>
     <View
-      style={ [
+      style={[
         StyleSheet.absoluteFill, {
           alignItems: 'center',
           justifyContent: 'center'
         }
-      ] }
+      ]}
 
-      // If camera permissions are allowed --------------------
+    // If camera permissions are allowed --------------------
     >
-      
-      { hasPermission && cameraDevice ? <>
-        { cameraMounted && <>
-          <Camera
-            ref={ camera }
-            style={ StyleSheet.absoluteFill }
-            outputs = {[frameOutput, videoOutput]}
-            constraints={[
-              {resolutionBias: videoOutput},
-              {binned: true},
-              {fps: 30}
-            ]}
-            isActive={ true }
-            device={ cameraDevice }
-            orientationSource={ 'device' }
-            onError={ handleCameraMountError }
-            onFacesDetected={ handleFacesDetected }
-            { ...faceDetectorOptions }
-            autoMode={ true }
-            cameraFacing={ 'front' }
-          
-          />
-        <View style = {styles.container}>
-        {appState === 'capturing' && (
-          <FrameProgressBar ref = {progressRef} />
-      )}
 
-      {/* Control Button */}
-      <View style={styles.buttonContainer}>
-        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
-      </View>
-      </View>
+      {hasPermission && cameraDevice ? <>
+        {cameraMounted && <>
+          <Camera
+            ref={camera}
+            style={StyleSheet.absoluteFill}
+            outputs={[frameOutput, videoOutput]}
+            constraints={[
+              { resolutionBias: videoOutput },
+              { binned: true },
+              { fps: 30 }
+            ]}
+            isActive={true}
+            device={cameraDevice}
+            orientationSource={'device'}
+            onError={handleCameraMountError}
+            onFacesDetected={handleFacesDetected}
+            {...faceDetectorOptions}
+            autoMode={true}
+            cameraFacing={'front'}
+
+          />
+          <View style={styles.container}>
+            {appState === 'capturing' && (
+              <FrameProgressBar ref={progressRef} />
+            )}
+
+            {/* Control Button */}
+            <View style={styles.buttonContainer}>
+              <Button title={buttonProps().text} onPress={buttonProps().onPress} />
+            </View>
+          </View>
 
           {/* <Animated.View
             style={ boundingBoxStyle}
@@ -570,77 +570,77 @@ const saveFrameBuffer = (base64MouthData: any) => {
             style = {lipBoxStyle}
           /> */}
 
-          <Canvas style = {StyleSheet.absoluteFill} pointerEvents='none'>
+          <Canvas style={StyleSheet.absoluteFill} pointerEvents='none'>
             <Points
-              points = {LipMeshPoints}
-              mode = 'points'
-              color = 'cyan'
+              points={LipMeshPoints}
+              mode='points'
+              color='cyan'
               strokeWidth={4}
               strokeCap={'round'}
-              />
+            />
           </Canvas>
 
-          { cameraPaused && <Text
-            style={ {
+          {cameraPaused && <Text
+            style={{
               width: '100%',
               backgroundColor: 'rgb(0,0,255)',
               textAlign: 'center',
               color: 'white'
-            } }
+            }}
           >
             Camera is PAUSED
-          </Text> }
-        </> }
+          </Text>}
+        </>}
 
-        { !cameraMounted && <Text
-          style={ {
+        {!cameraMounted && <Text
+          style={{
             width: '100%',
             backgroundColor: 'rgb(255,255,0)',
             textAlign: 'center'
-          } }
+          }}
         >
           Camera is NOT mounted
-        </Text> }
+        </Text>}
       </> : <Text
-        style={ {
+        style={{
           width: '100%',
           backgroundColor: 'rgb(255,0,0)',
           textAlign: 'center',
           color: 'white'
-        } }
+        }}
       >
         No camera device or permission
-      </Text> }
+      </Text>}
     </View>
 
     <View
-      style={ {
+      style={{
         position: 'absolute',
         bottom: 20 + + insets.bottom,
         left: 0,
         right: 0,
         display: 'flex',
         flexDirection: 'column'
-      } }
+      }}
     >
       <View
-        style={ {
+        style={{
           width: '100%',
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'space-around'
-        } }
+        }}
       >
       </View>
     </View>
-  </> );
+  </>);
 }
 
-function loadLipNet(): void{
+function loadLipNet(): void {
 
 }
 
-function beginRecordingPhase(): void{
+function beginRecordingPhase(): void {
 
 }
 
@@ -661,7 +661,7 @@ function beginRecordingPhase(): void{
 
 const styles = StyleSheet.create({
 
- // CAMERA STLYES
+  // CAMERA STLYES
 
   container: {
     flex: 1,
