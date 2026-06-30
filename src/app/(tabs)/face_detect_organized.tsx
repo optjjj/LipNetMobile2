@@ -44,7 +44,8 @@ import {
     Skia,
     StrokeCap,
     Canvas,
-    Points
+    Points,
+    Rect
 } from '@shopify/react-native-skia'
 import {
     useRunOnJS,
@@ -300,59 +301,60 @@ export default function FaceDetectionScreen(): ReactNode {
 
     const frameProcessor = useFrameOutput({
         onFrame: (frame) => {
-            
-        'worklet'
-        // ---- Detects faces and isolates contours ---- 
-        const FaceDetector = useFaceDetector(faceDetectorOptions)
-        const faces = FaceDetector.detectFaces(frame);
 
-        if (faces.length === 0) return
+            'worklet'
+            // ---- Detects faces and isolates contours ---- 
+            const FaceDetector = useFaceDetector(faceDetectorOptions)
+            const faces = FaceDetector.detectFaces(frame);
 
-        const contours = faces[0]?.contours
-        if (!contours) return
+            if (faces.length === 0) return
 
-        // ---- Calls LipPoints to find face, mouth, and lips ----
+            const contours = faces[0]?.contours
+            if (!contours) return
 
-        const LipReader = LipPoints(contours)
-        if (!LipReader) return
+            // ---- Calls LipPoints to find face, mouth, and lips ----
 
-        const {
-            width,
-            height,
-            x,
-            y,
-        } = LipReader.boundingBox
+            const LipReader = LipPoints(contours)
+            if (!LipReader) return
 
-        frame.render()
+            const {
+                width,
+                height,
+                x,
+                y,
+            } = LipReader.boundingBox
+
+            // frame.render()
 
 
-        // Skia Face Rectangle Draw
+            // Skia Face Rectangle Draw
 
-        const faceRect = Skia.XYWHRect(x, y, width, height)
-        const facePaint = Skia.Paint()
-        facePaint.setColor(Skia.Color('red'))
-        frame.drawRect(faceRect, facePaint)
+            const faceRect = Skia.XYWHRect(x, y, width, height)
+            const facePaint = Skia.Paint()
+            facePaint.setColor(Skia.Color('red'))
+            // frame.drawRect(faceRect, facePaint)
 
-        // Skia Mouth Rectangle Draw
+            // Skia Mouth Rectangle Draw
 
-        const mouthRect = Skia.XYWHRect(mouthX.value, mouthY.value, mouthH.value, mouthW.value)
-        const mouthPaint = Skia.Paint()
-        mouthPaint.setColor(Skia.Color('green'))
-        frame.drawRect(mouthRect, mouthPaint)
+            const mouthRect = Skia.XYWHRect(mouthX.value, mouthY.value, mouthH.value, mouthW.value)
+            const mouthPaint = Skia.Paint()
+            mouthPaint.setColor(Skia.Color('green'))
+            // frame.drawRect(mouthRect, mouthPaint)
 
-        // Skia Lip Circle Draw
+            // Skia Lip Circle Draw
 
-        const lipPaint = Skia.Paint()
-        lipPaint.setColor(Skia.Color('magneta'))
-        lipPaint.setStrokeWidth(4)
-        lipPaint.setStrokeCap(StrokeCap.Round)
-        for (let i = 0; i < LipPoints.length; i++) {
-            const p = LipReader.points[i];
-            frame.drawCircle(p.x, p.y, 2, lipPaint);
+            const lipPaint = Skia.Paint()
+            lipPaint.setColor(Skia.Color('magneta'))
+            lipPaint.setStrokeWidth(4)
+            lipPaint.setStrokeCap(StrokeCap.Round)
+            // for (let i = 0; i < LipPoints.length; i++) {
+            //     const p = LipReader.points[i];
+            //     frame.drawCircle(p.x, p.y, 2, lipPaint);
+            // }
+
+
         }
-
-
-    }, [])
+    })
 
 
 
@@ -378,7 +380,7 @@ export default function FaceDetectionScreen(): ReactNode {
                         //autoMode={true}
                         //cameraFacing="front"
                         outputs={[frameProcessor, videoOutput]}
-                        //frameProcessor={frameProcessor}
+                    //frameProcessor={frameProcessor}
                     />
 
                     <View style={styles.container}>
@@ -388,6 +390,18 @@ export default function FaceDetectionScreen(): ReactNode {
                             <Button title={buttonProps().text} onPress={buttonProps().onPress} />
                         </View>
                     </View>
+
+                    <Canvas style={StyleSheet.absoluteFill} pointerEvents = 'none'>
+                        <Points
+                            points={LipPoints}
+                            mode='points'
+                            color='cyan'
+                            strokeWidth={4}
+                            strokeCap={'round'}
+                            />
+                        
+                            
+                    </Canvas>
                 </>
             ) : (
                 <Text
