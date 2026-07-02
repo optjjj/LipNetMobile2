@@ -307,6 +307,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
 
     const frameProcessor = useFrameOutput({
+        pixelFormat: 'yuv',
         onFrame: (frame) => {
 
             'worklet'
