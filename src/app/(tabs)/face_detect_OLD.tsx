@@ -207,8 +207,8 @@ export default function FaceDetectionScreen(): ReactNode {
     const scaleFactorX = (width / 500)
     const scaleFactorY = (height / 1000)
 
-    const logToJS = () => {
-        console.log("Frame X: ", frameWidth, "Frame Y: ", frameHeight)
+    const logToJS = (x, y) => {
+        console.log("Frame X: ", x, "Frame Y: ", y)
     }
 
     console.log("Scale Factor X: ", scaleFactorX, "Scale Factor Y: ", scaleFactorY)
@@ -451,7 +451,7 @@ export default function FaceDetectionScreen(): ReactNode {
         const frameWidth = frame.width
         const frameHeight = 0
         isCapturing.value = false
-        runOnJS(logToJS)()
+        runOnJS(logToJS)(frameWidth, frameHeight)
     //   if (isCapturing.value === true && mouthW.value > 0){
     //     const croppedMouth = resize(frame, {
     //       scale: {width: 128, height: 64},
@@ -472,7 +472,7 @@ export default function FaceDetectionScreen(): ReactNode {
   }
 })
 
-            console.log("Frame X: ", frameWidth, "Frame Y: ", frameHeight)
+           
     return (
         <>
             <View
