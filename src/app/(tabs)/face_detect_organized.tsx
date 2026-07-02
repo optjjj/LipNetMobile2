@@ -310,10 +310,12 @@ export default function FaceDetectionScreen(): ReactNode {
 
             'worklet'
             // ---- Detects faces and isolates contours ---- 
-            const FaceDetector = useFaceDetector(faceDetectorOptions)
-            const faces = FaceDetector.detectFaces(frame);
+
+            const faces = detectFaces(frame)
 
             if (faces.length === 0) return
+
+            
 
             const contours = faces[0]?.contours
             if (!contours) return
