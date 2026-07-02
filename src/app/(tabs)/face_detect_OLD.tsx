@@ -147,6 +147,8 @@ export default function FaceDetectionScreen(): ReactNode {
         windowHeight: height
     }).current
 
+    type BoundingBox = {x: number; y: number; width: number; height: number}
+
     // Shared values for face and mouth overlay positions — updated from JS thread detection callback,
     // read by animated styles and the Skia canvas overlay
     const faces = useSharedValue<Face[]>([])
@@ -160,6 +162,9 @@ export default function FaceDetectionScreen(): ReactNode {
     const mouthY = useSharedValue(0)
     const tiltAmount = useSharedValue(0)
     const doneCropping = useSharedValue(false)
+
+    const mouthCropping = useSharedValue<BoundingBox>({ x: 0, y: 0, width:128, height: 64})
+
 
     // State Helper Functions
 
@@ -281,6 +286,15 @@ export default function FaceDetectionScreen(): ReactNode {
             mouthH.value = LipNetWidth
             mouthX.value = (LipCenterX - LipNetWidth / 2) - width
             mouthY.value = LipCenterY - offsetY - LipNetHeight / 2
+
+            mouthCropping.value = {
+                x: (LipCenterX - LipNetWidth / 2) - width,
+                y: LipCenterY - offsetY - LipNetHeight / 2,
+                width: LipNetHeight,
+                height: LipNetWidth
+            }
+
+            mouthX.value = width - LipCenterX
 
             // LIP CONTOUR DRAWING
 
