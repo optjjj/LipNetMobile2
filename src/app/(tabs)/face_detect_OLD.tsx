@@ -254,12 +254,12 @@ export default function FaceDetectionScreen(): ReactNode {
             // const scaleFactorX = (screen.width / width)
             // const scaleFactorY = (screen.height / height)
 
-            const frameW = 720; const frameH = 1280
+            const additionalYOffset = 40
 
-
-            const scale = Math.max(width / frameW, height / frameH);
-            const offsetX = (frameW * scale - width) / 2;
-            const offsetY = (frameH * scale - height) / 2;
+            const scale = Math.max(width / frameWidth.value, height / frameHeight.value);
+            const offsetX = (frameWidth.value * scale - width) / 2;
+            const offsetY = (frameHeight.value * scale - height) / 2 - additionalYOffset;
+            
 
             // LIP TILT CALCULATION
 
