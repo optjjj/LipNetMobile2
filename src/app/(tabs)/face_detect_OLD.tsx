@@ -418,7 +418,25 @@ export default function FaceDetectionScreen(): ReactNode {
 
         // Commented-out frame output: crops the mouth region per frame using the resize plugin,
         // encodes as base64 rgb, and hands off to saveFrameBuffer for LipNet inference
-const frameOutput = useFrameOutput({
+
+
+        // if (appState === 'capturing'){
+
+        //   const croppedFrameData = 1
+        //   frameBuffer.current.push(croppedFrameData)
+        //   //const croppedFrameData = extractPixels(frame, mouthBox)
+          
+        //   progressRef.current?.updateCount(frameBuffer.current.length);
+
+        //   if (frameBuffer.current.length >= 75){
+        //     console.log("75 Frames Captured")
+        //     setAppState('inferencing')
+        //   }
+        // }
+        // send frameBuffer to LipNet, then clear it
+    }
+
+    const frameOutput = useFrameOutput({
   pixelFormat: 'yuv',
   onFrame: (frame) => {
     'worklet';
@@ -447,21 +465,6 @@ const frameOutput = useFrameOutput({
   }
 })
 
-        // if (appState === 'capturing'){
-
-        //   const croppedFrameData = 1
-        //   frameBuffer.current.push(croppedFrameData)
-        //   //const croppedFrameData = extractPixels(frame, mouthBox)
-          
-        //   progressRef.current?.updateCount(frameBuffer.current.length);
-
-        //   if (frameBuffer.current.length >= 75){
-        //     console.log("75 Frames Captured")
-        //     setAppState('inferencing')
-        //   }
-        // }
-        // send frameBuffer to LipNet, then clear it
-    }
 
     return (
         <>
@@ -480,7 +483,7 @@ const frameOutput = useFrameOutput({
                                 <Camera
                                     ref={camera}
                                     style={StyleSheet.absoluteFill}
-                                    outputs={[videoOutput]}
+                                    outputs={[videoOutput, frameOutput]}
                                     constraints={[
                                         //{ resolutionBias: videoOutput },
                                         { binned: true },
