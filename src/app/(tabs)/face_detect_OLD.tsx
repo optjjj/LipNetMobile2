@@ -245,8 +245,8 @@ export default function FaceDetectionScreen(): ReactNode {
             ]
 
             // Scale Factors
-            const scaleFactorX = (screen.width / width)
-            const scaleFactorY = (screen.height / height)
+            // const scaleFactorX = (screen.width / width)
+            // const scaleFactorY = (screen.height / height)
 
             const SCALE_FACTOR = Math.max(scaleFactorX, scaleFactorY)
 
