@@ -254,10 +254,10 @@ export default function FaceDetectionScreen(): ReactNode {
             // const scaleFactorX = (screen.width / width)
             // const scaleFactorY = (screen.height / height)
 
-            const additionalYOffset = 40
+            const additionalYOffset = 45
 
             const scale = Math.max(width / frameWidth.value, height / frameHeight.value);
-            const offsetX = (frameWidth.value * scale - width) / 2;
+            const offsetX = (frameWidth.value * scale - width) / 2 + 100;
             const offsetY = (frameHeight.value * scale - height) / 2 - additionalYOffset;
             
 
@@ -279,7 +279,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
             mouthW.value = LipNetHeight
             mouthH.value = LipNetWidth
-            mouthX.value = (LipCenterX - offsetX - LipNetWidth / 2) - width
+            mouthX.value = (LipCenterX - LipNetWidth / 2) - width
             mouthY.value = LipCenterY - offsetY - LipNetHeight / 2
 
             // LIP CONTOUR DRAWING
