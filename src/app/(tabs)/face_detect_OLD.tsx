@@ -271,13 +271,13 @@ export default function FaceDetectionScreen(): ReactNode {
             const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
             const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
 
-            tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
+            tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * -0.75
 
             const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
             const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
 
             const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scale - offsetX+50)
-            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale - offsetY)
+            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale - offsetY + 40)
 
             const LipNetWidth = 128
             const LipNetHeight = 64
