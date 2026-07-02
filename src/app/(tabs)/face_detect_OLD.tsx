@@ -488,6 +488,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                     {...faceDetectorOptions}
                                     autoMode={true}
                                     cameraFacing={'front'}
+                                    resizeMode='cover'
                                 />
 
                                 <View style={styles.container}>
