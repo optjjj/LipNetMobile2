@@ -476,7 +476,7 @@ const frameOutput = useFrameOutput({
           <Camera
             ref={ camera }
             style={ StyleSheet.absoluteFill }
-            outputs = {[videoOutput, frameOutput]}
+            outputs = {[videoOutput]}
             constraints={[
               {resolutionBias: videoOutput},
               {binned: true},
