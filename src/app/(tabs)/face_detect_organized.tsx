@@ -115,6 +115,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
     const frameBuffer = useRef<any[]>([])
     const progressRef = useRef<ProgressBarRef>(null);
+    const isProcessing = useSharedValue(false)
 
     const saveFrameBuffer = (base64MouthData: any) => {
         frameBuffer.current.push(base64MouthData)
@@ -311,19 +312,32 @@ export default function FaceDetectionScreen(): ReactNode {
             'worklet'
             // ---- Detects faces and isolates contours ---- 
 
+            if (isProcessing.value === true) return
+
+            isProcessing.value = true
+
+            try {
             const faces = FaceDetector.detectFaces(frame)
 
-            if (faces.length === 0) return
-
+            if (faces.length === 0) {
+                isProcessing.value = false
+                return
+            }
             
 
             const contours = faces[0]?.contours
-            if (!contours) return
+            if (!contours) {
+                isProcessing.value = false
+                return
+            }
 
             // ---- Calls LipPoints to find face, mouth, and lips ----
 
             const LipReader = LipPoints(contours)
-            if (!LipReader) return
+            if (!LipReader) {
+                isProcessing.value = false    
+                return
+            }
 
             const {
                 width,
@@ -353,10 +367,10 @@ export default function FaceDetectionScreen(): ReactNode {
             const mouthPaint = Skia.Paint()
             mouthPaint.setColor(Skia.Color('green'))
 
-            mouthX.value = LipReader.mouth.x
-            mouthY.value = LipReader.mouth.y
-            mouthH.value = LipReader.mouth.height
-            mouthW.value = LipReader.mouth.width
+            mouthX.value = LipReader.boundingBox.x
+            mouthY.value = LipReader.boundingBox.y
+            mouthH.value = LipReader.boundingBox.height
+            mouthW.value = LipReader.boundingBox.width
             // frame.drawRect(mouthRect, mouthPaint)
 
             lipPoints.value = LipReader.points
@@ -371,7 +385,10 @@ export default function FaceDetectionScreen(): ReactNode {
             //     const p = LipReader.points[i];
             //     frame.drawCircle(p.x, p.y, 2, lipPaint);
             // }
-
+        }
+        finally{
+            isProcessing.value = false
+        }
 
         }
     })
