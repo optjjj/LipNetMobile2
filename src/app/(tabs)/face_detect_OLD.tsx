@@ -208,6 +208,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
     console.log("Scale Factor X: ", scaleFactorX, "Scale Factor Y: ", scaleFactorY)
     console.log("Window X: ", width, "Window Y: ", height)
+    console.log("Frame X: ", frameWidth, "Frame Y: ", frameHeight)
     // Buttons
 
     const buttonProps = () => {
@@ -417,32 +418,34 @@ export default function FaceDetectionScreen(): ReactNode {
 
         // Commented-out frame output: crops the mouth region per frame using the resize plugin,
         // encodes as base64 rgb, and hands off to saveFrameBuffer for LipNet inference
-// const frameOutput = useFrameOutput({
-//   pixelFormat: 'yuv',
-//   onFrame: (frame) => {
-//     'worklet';
+const frameOutput = useFrameOutput({
+  pixelFormat: 'yuv',
+  onFrame: (frame) => {
+    'worklet';
 
-//     try {
-//         isCapturing.value = false
-//     //   if (isCapturing.value === true && mouthW.value > 0){
-//     //     const croppedMouth = resize(frame, {
-//     //       scale: {width: 128, height: 64},
-//     //       crop: {
-//     //         x: mouthX.value,
-//     //         y: mouthY.value,
-//     //         width: mouthW.value,
-//     //         height: mouthH.value
-//     //       },
-//     //       pixelFormat: 'rgb',
-//     //       dataType: 'base64'
-//     //     })
-//     //     runOnJS(saveFrameBuffer)(croppedMouth);
-//       }
-//      finally{
-//       frame.dispose()
-//     }
-//   }
-// })
+    try {
+        const frameWidth = frame.width
+        const frameHeight = frame.height
+        isCapturing.value = false
+    //   if (isCapturing.value === true && mouthW.value > 0){
+    //     const croppedMouth = resize(frame, {
+    //       scale: {width: 128, height: 64},
+    //       crop: {
+    //         x: mouthX.value,
+    //         y: mouthY.value,
+    //         width: mouthW.value,
+    //         height: mouthH.value
+    //       },
+    //       pixelFormat: 'rgb',
+    //       dataType: 'base64'
+    //     })
+    //     runOnJS(saveFrameBuffer)(croppedMouth);
+      }
+     finally{
+      frame.dispose()
+    }
+  }
+})
 
         // if (appState === 'capturing'){
 
