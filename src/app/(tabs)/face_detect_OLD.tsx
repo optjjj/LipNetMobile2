@@ -87,6 +87,9 @@ export default function FaceDetectionScreen(): ReactNode {
         height
     } = useWindowDimensions()
 
+    const frameWidth = useSharedValue(720)
+    const frameHeight = useSharedValue(1280)
+
     // State Machine
     const [appState, setAppState] = useState<StateMachine>('idle');
 
@@ -476,17 +479,18 @@ export default function FaceDetectionScreen(): ReactNode {
                                     style={StyleSheet.absoluteFill}
                                     outputs={[videoOutput]}
                                     constraints={[
-                                        { resolutionBias: videoOutput },
+                                        //{ resolutionBias: videoOutput },
                                         { binned: true },
-                                        { fps: 30 }
+                                        { fps: 25 }
                                     ]}
                                     isActive={true}
+                                    
                                     device={cameraDevice}
                                     orientationSource={'device'}
                                     onError={handleCameraMountError}
                                     onFacesDetected={handleFacesDetected}
                                     {...faceDetectorOptions}
-                                    autoMode={true}
+                                    autoMode={false}
                                     cameraFacing={'front'}
                                     resizeMode='cover'
                                 />
