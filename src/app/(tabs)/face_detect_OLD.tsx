@@ -417,32 +417,32 @@ const saveFrameBuffer = (base64MouthData: string) => {
         }
     }
 
-const frameOutput = useFrameOutput({
-  pixelFormat: 'yuv',
-  onFrame: (frame) => {
-    'worklet';
+// const frameOutput = useFrameOutput({
+//   pixelFormat: 'yuv',
+//   onFrame: (frame) => {
+//     'worklet';
 
-    try {
-        isCapturing.value = false
-    //   if (isCapturing.value === true && mouthW.value > 0){
-    //     const croppedMouth = resize(frame, {
-    //       scale: {width: 128, height: 64},
-    //       crop: {
-    //         x: mouthX.value,
-    //         y: mouthY.value,
-    //         width: mouthW.value,
-    //         height: mouthH.value
-    //       },
-    //       pixelFormat: 'rgb',
-    //       dataType: 'base64'
-    //     })
-    //     runOnJS(saveFrameBuffer)(croppedMouth);
-      }
-     finally{
-      frame.dispose()
-    }
-  }
-})
+//     try {
+//         isCapturing.value = false
+//     //   if (isCapturing.value === true && mouthW.value > 0){
+//     //     const croppedMouth = resize(frame, {
+//     //       scale: {width: 128, height: 64},
+//     //       crop: {
+//     //         x: mouthX.value,
+//     //         y: mouthY.value,
+//     //         width: mouthW.value,
+//     //         height: mouthH.value
+//     //       },
+//     //       pixelFormat: 'rgb',
+//     //       dataType: 'base64'
+//     //     })
+//     //     runOnJS(saveFrameBuffer)(croppedMouth);
+//       }
+//      finally{
+//       frame.dispose()
+//     }
+//   }
+// })
 
 
 
