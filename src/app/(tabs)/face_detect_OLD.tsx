@@ -41,6 +41,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { Canvas, Points, vec } from '@shopify/react-native-skia'
 import {crop} from 'vision-camera-cropper'
+import { runOnJS } from 'react-native-worklets'
 
 
 // State Machine Definition
@@ -206,6 +207,10 @@ export default function FaceDetectionScreen(): ReactNode {
     const scaleFactorX = (width / 500)
     const scaleFactorY = (height / 1000)
 
+    const logToJS = () => {
+        console.log("Frame X: ", frameWidth, "Frame Y: ", frameHeight)
+    }
+
     console.log("Scale Factor X: ", scaleFactorX, "Scale Factor Y: ", scaleFactorY)
     console.log("Window X: ", width, "Window Y: ", height)
 
@@ -253,7 +258,7 @@ export default function FaceDetectionScreen(): ReactNode {
             // const scaleFactorY = (screen.height / height)
 
             const frameW = 720; const frameH = 1280
-            console.log("Frame X: ", frameWidth, "Frame Y: ", frameHeight)
+
 
             const scale = Math.max(width / frameW, height / frameH);
             const offsetX = (frameW * scale - width) / 2;
@@ -446,6 +451,7 @@ export default function FaceDetectionScreen(): ReactNode {
         const frameWidth = frame.width
         const frameHeight = 0
         isCapturing.value = false
+        runOnJS(logToJS)()
     //   if (isCapturing.value === true && mouthW.value > 0){
     //     const croppedMouth = resize(frame, {
     //       scale: {width: 128, height: 64},
