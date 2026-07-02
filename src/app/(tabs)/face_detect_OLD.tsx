@@ -248,18 +248,11 @@ export default function FaceDetectionScreen(): ReactNode {
             // const scaleFactorX = (screen.width / width)
             // const scaleFactorY = (screen.height / height)
 
-            const frameW = 1920; const frameH = 1080
+            const frameW = 720; const frameH = 1280
 
             const scale = Math.max(width / frameW, height / frameH);
             const offsetX = (frameW * scale - width) / 2;
             const offsetY = (frameH * scale - height) / 2;
-
-            const SCALE_FACTOR = Math.max(scaleFactorX, scaleFactorY)
-
-
-
-            const X_OFFSET = ((width * SCALE_FACTOR - width) / 2)
-            const Y_CORRECTION = 40
 
             // LIP TILT CALCULATION
 
@@ -271,16 +264,16 @@ export default function FaceDetectionScreen(): ReactNode {
             const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
             const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
 
-            const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scale)
-            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale)
+            const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scale - offsetX)
+            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale - offsetY)
 
             const LipNetWidth = 128
             const LipNetHeight = 64
 
             mouthW.value = LipNetHeight
             mouthH.value = LipNetWidth
-            mouthX.value = LipCenterX - X_OFFSET - LipNetWidth / 2
-            mouthY.value = LipCenterY - Y_CORRECTION - LipNetHeight / 2
+            mouthX.value = LipCenterX - offsetX - LipNetWidth / 2
+            mouthY.value = LipCenterY - offsetY - LipNetHeight / 2
 
             // LIP CONTOUR DRAWING
 
