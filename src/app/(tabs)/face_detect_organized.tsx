@@ -45,7 +45,9 @@ import {
     StrokeCap,
     Canvas,
     Points,
-    Rect
+    Rect,
+    SkPoint,
+    Paint
 } from '@shopify/react-native-skia'
 import {
     useRunOnJS,
@@ -166,6 +168,9 @@ export default function FaceDetectionScreen(): ReactNode {
     const mouthX = useSharedValue(0)
     const mouthY = useSharedValue(0)
     const tiltAmount = useSharedValue(0)
+    const lipPoints = useSharedValue<{x: number, y: number}[]>([])
+
+
 
     // Face Detection
 
@@ -177,6 +182,7 @@ export default function FaceDetectionScreen(): ReactNode {
         windowWidth: width,
         windowHeight: height
     }).current
+    const {detectFaces} = useFaceDetector(faceDetectorOptions)
 
     // State Helper Functions
 
@@ -329,9 +335,14 @@ export default function FaceDetectionScreen(): ReactNode {
 
             // Skia Face Rectangle Draw
 
-            const faceRect = Skia.XYWHRect(x, y, width, height)
-            const facePaint = Skia.Paint()
-            facePaint.setColor(Skia.Color('red'))
+            // const faceRect = Skia.XYWHRect(x, y, width, height)
+            // const facePaint = Skia.Paint()
+            // facePaint.setColor(Skia.Color('red'))
+
+            aFaceX.value = x
+            aFaceY.value = y
+            aFaceW.value = width
+            aFaceH.value = height
             // frame.drawRect(faceRect, facePaint)
 
             // Skia Mouth Rectangle Draw
@@ -339,7 +350,14 @@ export default function FaceDetectionScreen(): ReactNode {
             const mouthRect = Skia.XYWHRect(mouthX.value, mouthY.value, mouthH.value, mouthW.value)
             const mouthPaint = Skia.Paint()
             mouthPaint.setColor(Skia.Color('green'))
+
+            mouthX.value = LipReader.mouth.x
+            mouthY.value = LipReader.mouth.y
+            mouthH.value = LipReader.mouth.height
+            mouthW.value = LipReader.mouth.width
             // frame.drawRect(mouthRect, mouthPaint)
+
+            lipPoints.value = LipReader.points
 
             // Skia Lip Circle Draw
 
@@ -393,12 +411,27 @@ export default function FaceDetectionScreen(): ReactNode {
 
                     <Canvas style={StyleSheet.absoluteFill} pointerEvents = 'none'>
                         <Points
-                            points={LipPoints}
+                            points={lipPoints}
                             mode='points'
                             color='cyan'
                             strokeWidth={4}
                             strokeCap={'round'}
                             />
+                        <Rect
+                        x = {aFaceX}
+                        y = {aFaceY}
+                        width = {aFaceW}
+                        height = {aFaceH}>    
+                        <Paint color='red' style = 'stroke' strokeWidth={2} />
+                        </Rect>
+
+                        <Rect
+                        x = {mouthX}
+                        y = {mouthY}
+                        width = {mouthW}
+                        height = {mouthH}>
+                            <Paint color = 'blue' style = 'stroke' strokeWidth={2} />
+                        </Rect>
                         
                             
                     </Canvas>
