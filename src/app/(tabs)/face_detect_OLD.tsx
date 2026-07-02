@@ -423,21 +423,22 @@ const frameOutput = useFrameOutput({
     'worklet';
 
     try {
-      if (isCapturing.value === true && mouthW.value > 0){
-        const croppedMouth = resize(frame, {
-          scale: {width: 128, height: 64},
-          crop: {
-            x: mouthX.value,
-            y: mouthY.value,
-            width: mouthW.value,
-            height: mouthH.value
-          },
-          pixelFormat: 'rgb',
-          dataType: 'base64'
-        })
-        runOnJS(saveFrameBuffer)(croppedMouth);
+        isCapturing.value = false
+    //   if (isCapturing.value === true && mouthW.value > 0){
+    //     const croppedMouth = resize(frame, {
+    //       scale: {width: 128, height: 64},
+    //       crop: {
+    //         x: mouthX.value,
+    //         y: mouthY.value,
+    //         width: mouthW.value,
+    //         height: mouthH.value
+    //       },
+    //       pixelFormat: 'rgb',
+    //       dataType: 'base64'
+    //     })
+    //     runOnJS(saveFrameBuffer)(croppedMouth);
       }
-    } finally{
+     finally{
       frame.dispose()
     }
   }
