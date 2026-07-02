@@ -92,7 +92,7 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
   )
 })
 
-const isCapturing = useSharedValue<boolean>(false);
+
 
 
 
@@ -104,6 +104,7 @@ const insets = useSafeAreaInsets()
   } = useWindowDimensions()
   const [appState, setAppState] = useState<StateMachine>('idle');
   const frameBuffer = useRef<any[]>([])
+  const isCapturing = useSharedValue<boolean>(false);
   const progressRef = useRef<ProgressBarRef>(null);
   const {
     hasPermission,
