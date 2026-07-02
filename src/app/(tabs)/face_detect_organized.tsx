@@ -229,7 +229,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
     // --------------- Worklet / Math Logic -------------------------
 
-    export const LipPoints(contours) {
+    const LipPoints = (contours: Record<string, { x: number; y: number }[]> | null | undefined) => {
         'worklet'
 
         if (!contours) return null;
