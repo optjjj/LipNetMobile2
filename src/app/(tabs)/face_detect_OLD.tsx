@@ -42,6 +42,7 @@ import Animated, {
 import { Canvas, Points, vec } from '@shopify/react-native-skia'
 import {crop} from 'vision-camera-cropper'
 import { runOnJS } from 'react-native-worklets'
+import { useRunOnJS } from 'react-native-worklets-core'
 
 
 // State Machine Definition
@@ -442,6 +443,8 @@ export default function FaceDetectionScreen(): ReactNode {
         // send frameBuffer to LipNet, then clear it
     }
 
+    const consoleLogonJS = useRunOnJS(logToJS, [])
+
     const frameOutput = useFrameOutput({
   pixelFormat: 'yuv',
   onFrame: (frame) => {
@@ -452,6 +455,7 @@ export default function FaceDetectionScreen(): ReactNode {
         const frameHeight = 0
         isCapturing.value = false
         runOnJS(logToJS)(frameWidth, frameHeight)
+        consoleLogonJS(frameWidth, frameHeight)
     //   if (isCapturing.value === true && mouthW.value > 0){
     //     const croppedMouth = resize(frame, {
     //       scale: {width: 128, height: 64},
