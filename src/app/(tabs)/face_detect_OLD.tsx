@@ -279,7 +279,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
             mouthW.value = LipNetHeight
             mouthH.value = LipNetWidth
-            mouthX.value = LipCenterX - offsetX - LipNetWidth / 2
+            mouthX.value = (LipCenterX - offsetX - LipNetWidth / 2) - width
             mouthY.value = LipCenterY - offsetY - LipNetHeight / 2
 
             // LIP CONTOUR DRAWING
@@ -287,8 +287,9 @@ export default function FaceDetectionScreen(): ReactNode {
             return allLipPoints.map(p => {
                 const scaledX = p.x * scale
                 const centeredX = scaledX - offsetX
+                const mirroredX = width - centeredX
                 const centeredY = p.y * scale - offsetY
-                return vec(centeredX, centeredY)
+                return vec(mirroredX, centeredY)
             })
         }
         return []
