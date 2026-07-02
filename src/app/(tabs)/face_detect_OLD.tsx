@@ -208,7 +208,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
     console.log("Scale Factor X: ", scaleFactorX, "Scale Factor Y: ", scaleFactorY)
     console.log("Window X: ", width, "Window Y: ", height)
-    console.log("Frame X: ", frameWidth, "Frame Y: ", frameHeight)
+
     // Buttons
 
     const buttonProps = () => {
@@ -253,6 +253,7 @@ export default function FaceDetectionScreen(): ReactNode {
             // const scaleFactorY = (screen.height / height)
 
             const frameW = 720; const frameH = 1280
+            console.log("Frame X: ", frameWidth, "Frame Y: ", frameHeight)
 
             const scale = Math.max(width / frameW, height / frameH);
             const offsetX = (frameW * scale - width) / 2;
