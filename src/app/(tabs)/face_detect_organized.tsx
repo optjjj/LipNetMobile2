@@ -182,7 +182,7 @@ export default function FaceDetectionScreen(): ReactNode {
         windowWidth: width,
         windowHeight: height
     }).current
-    const {detectFaces} = useFaceDetector(faceDetectorOptions)
+    const FaceDetector = useFaceDetector(faceDetectorOptions)
 
     // State Helper Functions
 
@@ -311,7 +311,7 @@ export default function FaceDetectionScreen(): ReactNode {
             'worklet'
             // ---- Detects faces and isolates contours ---- 
 
-            const faces = detectFaces(frame)
+            const faces = FaceDetector.detectFaces(frame)
 
             if (faces.length === 0) return
 
