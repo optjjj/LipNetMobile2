@@ -124,7 +124,7 @@ export default function FaceDetectionScreen(): ReactNode {
     const cameraDevice = useCameraDevice(cameraFacing)
 
     const videoOutput = useVideoOutput({
-        targetResolution: { width: 1280, height: 720 }
+        targetResolution: { width: 500, height: 1000 }
     })
 
     // Vision Camera ref
@@ -200,8 +200,8 @@ export default function FaceDetectionScreen(): ReactNode {
         handleDoneState()
     }
 
-    const scaleFactorX = (width / 1280)
-    const scaleFactorY = (height / 720)
+    const scaleFactorX = (width / 500)
+    const scaleFactorY = (height / 1000)
 
     console.log("Scale Factor X: ", scaleFactorX, "Scale Factor Y: ", scaleFactorY)
     console.log("Window X: ", width, "Window Y: ", height)
