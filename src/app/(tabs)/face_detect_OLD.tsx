@@ -208,10 +208,6 @@ export default function FaceDetectionScreen(): ReactNode {
     const scaleFactorX = (width / 500)
     const scaleFactorY = (height / 1000)
 
-    const logToJS = (x, y) => {
-        console.log("Frame X: ", x, "Frame Y: ", y)
-    }
-
     console.log("Scale Factor X: ", scaleFactorX, "Scale Factor Y: ", scaleFactorY)
     console.log("Window X: ", width, "Window Y: ", height)
 
@@ -443,19 +439,16 @@ export default function FaceDetectionScreen(): ReactNode {
         // send frameBuffer to LipNet, then clear it
     }
 
-    const consoleLogonJS = useRunOnJS(logToJS, [])
-
     const frameOutput = useFrameOutput({
   pixelFormat: 'yuv',
   onFrame: (frame) => {
     'worklet';
 
     try {
-        const frameWidth = frame.width
-        const frameHeight = 0
+        frameWidth.value = frame.width;
+        frameHeight.value = frame.height;
         isCapturing.value = false
-        runOnJS(logToJS)(frameWidth, frameHeight)
-        consoleLogonJS(frameWidth, frameHeight)
+
     //   if (isCapturing.value === true && mouthW.value > 0){
     //     const croppedMouth = resize(frame, {
     //       scale: {width: 128, height: 64},
@@ -475,6 +468,8 @@ export default function FaceDetectionScreen(): ReactNode {
     }
   }
 })
+
+    console.log("Frame X: ", frameWidth.value, "Frame Y: ", frameHeight.value)
 
            
     return (
