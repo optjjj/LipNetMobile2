@@ -200,11 +200,11 @@ export default function FaceDetectionScreen(): ReactNode {
         handleDoneState()
     }
 
-    const scaleFactorX = (screen.width / width)
-    const scaleFactorY = (screen.height / height)
+    const scaleFactorX = (width / 1280)
+    const scaleFactorY = (height / 720)
 
     console.log("Scale Factor X: ", scaleFactorX, "Scale Factor Y: ", scaleFactorY)
-    console.log("Window X: ", screen.width, "Window Y: ", screen.height)
+    console.log("Window X: ", width, "Window Y: ", height)
     // Buttons
 
     const buttonProps = () => {
