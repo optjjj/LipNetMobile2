@@ -472,7 +472,7 @@ export default function FaceDetectionScreen(): ReactNode {
   }
 })
 
-
+            console.log("Frame X: ", frameWidth, "Frame Y: ", frameHeight)
     return (
         <>
             <View
