@@ -444,7 +444,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
     try {
         const frameWidth = frame.width
-        const frameHeight = frame.height
+        const frameHeight = 0
         isCapturing.value = false
     //   if (isCapturing.value === true && mouthW.value > 0){
     //     const croppedMouth = resize(frame, {
