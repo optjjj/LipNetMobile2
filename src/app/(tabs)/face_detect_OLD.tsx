@@ -248,6 +248,12 @@ export default function FaceDetectionScreen(): ReactNode {
             // const scaleFactorX = (screen.width / width)
             // const scaleFactorY = (screen.height / height)
 
+            const frameW = 1920; const frameH = 1080
+
+            const scale = Math.max(width / frameW, height / frameH);
+            const offsetX = (frameW * scale - width) / 2;
+            const offsetY = (frameH * scale - height) / 2;
+
             const SCALE_FACTOR = Math.max(scaleFactorX, scaleFactorY)
 
 
@@ -265,8 +271,8 @@ export default function FaceDetectionScreen(): ReactNode {
             const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
             const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
 
-            const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * SCALE_FACTOR)
-            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2)
+            const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scale)
+            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale)
 
             const LipNetWidth = 128
             const LipNetHeight = 64
@@ -279,9 +285,10 @@ export default function FaceDetectionScreen(): ReactNode {
             // LIP CONTOUR DRAWING
 
             return allLipPoints.map(p => {
-                const scaledX = p.x * SCALE_FACTOR
-                const centeredX = scaledX - X_OFFSET
-                return vec(centeredX, (p.y - Y_CORRECTION))
+                const scaledX = p.x * scale
+                const centeredX = scaledX - offsetX
+                const centeredY = p.y * scale - offsetY
+                return vec(centeredX, centeredY)
             })
         }
         return []
