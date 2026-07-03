@@ -40,7 +40,7 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated'
 import { Canvas, Points, vec } from '@shopify/react-native-skia'
-import {crop} from 'vision-camera-cropper'
+import {crop, CropResult} from 'vision-camera-cropper'
 import { runOnJS } from 'react-native-worklets'
 import { useRunOnJS } from 'react-native-worklets-core'
 
@@ -147,7 +147,7 @@ export default function FaceDetectionScreen(): ReactNode {
         windowHeight: height
     }).current
 
-    type BoundingBox = {x: number; y: number; width: number; height: number}
+    type CropValue = {left: number, top: number, width: number, height: number}
 
     // Shared values for face and mouth overlay positions — updated from JS thread detection callback,
     // read by animated styles and the Skia canvas overlay
@@ -163,15 +163,15 @@ export default function FaceDetectionScreen(): ReactNode {
     const tiltAmount = useSharedValue(0)
     const doneCropping = useSharedValue(false)
 
-    const mouthCropping = useSharedValue<BoundingBox>({ x: 0, y: 0, width:128, height: 64})
-
+    const cropRegionShared = useSharedValue<CropValue>({left: 0, top: 0, width: 128, height: 64})
 
     // State Helper Functions
 
     // Pushes a cropped mouth frame into the buffer; transitions to inferencing once 75 frames are collected
-    const saveFrameBuffer = (base64MouthData: string) => {
-        frameBuffer.current.push(base64MouthData)
-
+    const saveFrameBuffer = (base64MouthData: CropResult) => {
+        console.log("saveFrameBuffer is being called")
+        const framelength = frameBuffer.current.push(base64MouthData)
+        console.log("Length of frameBuffer: ", framelength)
         progressRef.current?.updateCount(frameBuffer.current.length)
 
         if (frameBuffer.current.length === 75) { // end recording phase
@@ -287,9 +287,9 @@ export default function FaceDetectionScreen(): ReactNode {
             mouthX.value = (LipCenterX - LipNetWidth / 2) - width
             mouthY.value = LipCenterY - offsetY - LipNetHeight / 2
 
-            mouthCropping.value = {
-                x: (LipCenterX - LipNetWidth / 2) - width,
-                y: LipCenterY - offsetY - LipNetHeight / 2,
+            cropRegionShared.value = {
+                left: (LipCenterX - LipNetWidth / 2) - width,
+                top: LipCenterY - offsetY - LipNetHeight / 2,
                 width: LipNetHeight,
                 height: LipNetWidth
             }
@@ -454,6 +454,13 @@ export default function FaceDetectionScreen(): ReactNode {
         // send frameBuffer to LipNet, then clear it
     }
 
+    const FrameOnJS = useRunOnJS((cropData: CropResult) =>{
+        // if (typeof cropData !== 'string'){
+        //     return;
+        // }
+        saveFrameBuffer(cropData)
+    }, [])
+
     const frameOutput = useFrameOutput({
   pixelFormat: 'yuv',
   onFrame: (frame) => {
@@ -463,6 +470,11 @@ export default function FaceDetectionScreen(): ReactNode {
         frameWidth.value = frame.width;
         frameHeight.value = frame.height;
         isCapturing.value = false
+        const result = crop(frame, {
+            cropRegion: cropRegionShared.value,
+            includeImageBase64: true,
+        });
+        FrameOnJS(result)
 
     //   if (isCapturing.value === true && mouthW.value > 0){
     //     const croppedMouth = resize(frame, {
