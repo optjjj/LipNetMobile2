@@ -40,9 +40,8 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated'
 import { Canvas, Points, vec } from '@shopify/react-native-skia'
-import {crop, CropResult} from 'vision-camera-cropper'
-import { runOnJS } from 'react-native-worklets'
-import { useRunOnJS } from 'react-native-worklets-core'
+import { crop, CropResult } from 'vision-camera-cropper'
+import { scheduleOnRN } from 'react-native-worklets'
 
 
 // State Machine Definition
@@ -147,7 +146,7 @@ export default function FaceDetectionScreen(): ReactNode {
         windowHeight: height
     }).current
 
-    type CropValue = {left: number, top: number, width: number, height: number}
+    type CropValue = { left: number, top: number, width: number, height: number }
 
     // Shared values for face and mouth overlay positions — updated from JS thread detection callback,
     // read by animated styles and the Skia canvas overlay
@@ -163,7 +162,7 @@ export default function FaceDetectionScreen(): ReactNode {
     const tiltAmount = useSharedValue(0)
     const doneCropping = useSharedValue(false)
 
-    const cropRegionShared = useSharedValue<CropValue>({left: 0, top: 0, width: 128, height: 64})
+    const cropRegionShared = useSharedValue<CropValue>({ left: 0, top: 0, width: 128, height: 64 })
 
     // State Helper Functions
 
@@ -210,10 +209,6 @@ export default function FaceDetectionScreen(): ReactNode {
         handleDoneState()
     }
 
-    const scaleFactorX = (width / 500)
-    const scaleFactorY = (height / 1000)
-
-    console.log("Scale Factor X: ", scaleFactorX, "Scale Factor Y: ", scaleFactorY)
     console.log("Window X: ", width, "Window Y: ", height)
 
     // Buttons
@@ -264,7 +259,7 @@ export default function FaceDetectionScreen(): ReactNode {
             const scale = Math.max(width / frameWidth.value, height / frameHeight.value);
             const offsetX = (frameWidth.value * scale - width) / 2 + 100;
             const offsetY = (frameHeight.value * scale - height) / 2 + additionalYOffset;
-            
+
 
             // LIP TILT CALCULATION
 
@@ -443,7 +438,7 @@ export default function FaceDetectionScreen(): ReactNode {
         //   const croppedFrameData = 1
         //   frameBuffer.current.push(croppedFrameData)
         //   //const croppedFrameData = extractPixels(frame, mouthBox)
-          
+
         //   progressRef.current?.updateCount(frameBuffer.current.length);
 
         //   if (frameBuffer.current.length >= 75){
@@ -454,59 +449,59 @@ export default function FaceDetectionScreen(): ReactNode {
         // send frameBuffer to LipNet, then clear it
     }
 
-    const FrameOnJS = useRunOnJS((cropData: CropResult) =>{
+    const FrameOnJS = useRunOnJS((cropData: CropResult) => {
         // if (typeof cropData !== 'string'){
         //     return;
         // }
         saveFrameBuffer(cropData)
     }, [])
 
-    const sayHello = useRunOnJS((name: string) => {
-  console.log(`Hello ${name}, I am running on the JS Thread!`)
-}, [])
+    const sayHello = (name: string) => {
+        console.log(`Hello ${name}, I am running on the JS Thread!`)
+    }
 
     const frameOutput = useFrameOutput({
-  pixelFormat: 'yuv',
-  onFrame: (frame) => {
-    'worklet';
-    sayHello("whats up")
-    console.log ("testing log printo")
-    try {
-        frameWidth.value = frame.width;
-        frameHeight.value = frame.height;
-        isCapturing.value = false
-        const result = crop(frame, {
-            cropRegion: cropRegionShared.value,
-            includeImageBase64: true,
-        });
-        FrameOnJS(result)
+        pixelFormat: 'yuv',
+        onFrame: (frame) => {
+            'worklet';
+            console.log("testing frameOutput Print")
+            scheduleOnRN(sayHello, "hello")
+            try {
+                frameWidth.value = frame.width;
+                frameHeight.value = frame.height;
+                isCapturing.value = false
+                const result = crop(frame, {
+                    cropRegion: cropRegionShared.value,
+                    includeImageBase64: true,
+                });
+                scheduleOnRN(saveFrameBuffer, result)
 
-    //   if (isCapturing.value === true && mouthW.value > 0){
-    //     const croppedMouth = resize(frame, {
-    //       scale: {width: 128, height: 64},
-    //       crop: {
-    //         x: mouthX.value,
-    //         y: mouthY.value,
-    //         width: mouthW.value,
-    //         height: mouthH.value
-    //       },
-    //       pixelFormat: 'rgb',
-    //       dataType: 'base64'
-    //     })
-    //     runOnJS(saveFrameBuffer)(croppedMouth);
-      }
-      catch (error){
-        console.error('Cropping Error: ${error.message}')
-      }
-     finally{
-      frame.dispose()
-    }
-  }
-})
+                //   if (isCapturing.value === true && mouthW.value > 0){
+                //     const croppedMouth = resize(frame, {
+                //       scale: {width: 128, height: 64},
+                //       crop: {
+                //         x: mouthX.value,
+                //         y: mouthY.value,
+                //         width: mouthW.value,
+                //         height: mouthH.value
+                //       },
+                //       pixelFormat: 'rgb',
+                //       dataType: 'base64'
+                //     })
+                //     runOnJS(saveFrameBuffer)(croppedMouth);
+            }
+            catch (error) {
+                console.error('Cropping Error: ${error.message}')
+            }
+            finally {
+                frame.dispose()
+            }
+        }
+    })
 
     console.log("Frame X: ", frameWidth.value, "Frame Y: ", frameHeight.value)
 
-           
+
     return (
         <>
             <View
@@ -531,7 +526,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                         { fps: 25 }
                                     ]}
                                     isActive={true}
-                                    
+
                                     device={cameraDevice}
                                     orientationSource={'device'}
                                     onError={handleCameraMountError}
