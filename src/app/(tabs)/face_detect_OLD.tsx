@@ -230,6 +230,7 @@ export default function FaceDetectionScreen(): ReactNode {
     // Scales coordinates to match screen space, computes the LipNet mouth bounding box,
     // and applies a tilt correction so the crop tracks head rotation.
     const LipMeshPoints = useDerivedValue(() => {
+        scheduleOnRN(sayHello, "hello")
         if (faces.value.length === 0) return [];
 
         const contours = faces.value[0]?.contours;
