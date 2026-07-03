@@ -9,8 +9,7 @@ module.exports = function(api) {
 
 
       // Add this if you are explicitly using react-native-worklets-core
-      ['react-native-worklets/plugin', {}, 'worklets-custom-name'], 
-      ['react-native-reanimated/plugin', {}, 'reanimated-custom-name']
+      ['react-native-worklets/plugin', {}, 'worklets-custom-name']
     ],
   };
 };

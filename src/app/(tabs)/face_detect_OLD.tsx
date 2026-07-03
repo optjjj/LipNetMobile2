@@ -37,7 +37,7 @@ import Animated, {
     useAnimatedStyle,
     useDerivedValue,
     useSharedValue,
-    withTiming
+    withTiming,
 } from 'react-native-reanimated'
 import { Canvas, Points, vec } from '@shopify/react-native-skia'
 import { crop, CropResult } from 'vision-camera-cropper'
@@ -162,6 +162,10 @@ export default function FaceDetectionScreen(): ReactNode {
     const tiltAmount = useSharedValue(0)
     const doneCropping = useSharedValue(false)
 
+    const sayHello = (name) => {
+        console.log(`Hello ${name}, I am running on the JS Thread!`)
+    }
+
     const cropRegionShared = useSharedValue<CropValue>({ left: 0, top: 0, width: 128, height: 64 })
 
     // State Helper Functions
@@ -230,6 +234,7 @@ export default function FaceDetectionScreen(): ReactNode {
     // Scales coordinates to match screen space, computes the LipNet mouth bounding box,
     // and applies a tilt correction so the crop tracks head rotation.
     const LipMeshPoints = useDerivedValue(() => {
+        scheduleOnRN((greeting) => console.log(greeting), "Hello from RN Runtime");
         scheduleOnRN(sayHello, "hello")
         if (faces.value.length === 0) return [];
 
@@ -457,9 +462,7 @@ export default function FaceDetectionScreen(): ReactNode {
     //     saveFrameBuffer(cropData)
     // }, [])
 
-    const sayHello = (name: string) => {
-        console.log(`Hello ${name}, I am running on the JS Thread!`)
-    }
+
 
     const frameOutput = useFrameOutput({
         pixelFormat: 'yuv',
