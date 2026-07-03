@@ -461,11 +461,15 @@ export default function FaceDetectionScreen(): ReactNode {
         saveFrameBuffer(cropData)
     }, [])
 
+    const sayHello = useRunOnJS((name: string) => {
+  console.log(`Hello ${name}, I am running on the JS Thread!`)
+}, [])
+
     const frameOutput = useFrameOutput({
   pixelFormat: 'yuv',
   onFrame: (frame) => {
     'worklet';
-
+    sayHello("whats up")
     try {
         frameWidth.value = frame.width;
         frameHeight.value = frame.height;
