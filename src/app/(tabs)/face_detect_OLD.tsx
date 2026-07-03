@@ -212,9 +212,7 @@ export default function FaceDetectionScreen(): ReactNode {
         setAppState('done')
         handleDoneState()
     }
-
-    console.log("Window X: ", width, "Window Y: ", height)
-
+    
     // Buttons
 
     const buttonProps = () => {
@@ -502,9 +500,6 @@ export default function FaceDetectionScreen(): ReactNode {
             }
         }
     })
-
-    console.log("Frame X: ", frameWidth.value, "Frame Y: ", frameHeight.value)
-
 
     return (
         <>
