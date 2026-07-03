@@ -212,7 +212,7 @@ export default function FaceDetectionScreen(): ReactNode {
         setAppState('done')
         handleDoneState()
     }
-    
+
     // Buttons
 
     const buttonProps = () => {
@@ -476,7 +476,9 @@ export default function FaceDetectionScreen(): ReactNode {
                     cropRegion: cropRegionShared.value,
                     includeImageBase64: true,
                 });
-                scheduleOnRN(saveFrameBuffer, result)
+                //scheduleOnRN(saveFrameBuffer, result)
+
+                scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
 
                 //   if (isCapturing.value === true && mouthW.value > 0){
                 //     const croppedMouth = resize(frame, {
