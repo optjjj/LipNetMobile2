@@ -421,17 +421,7 @@ export default function FaceDetectionScreen(): ReactNode {
         aFaceY.value = y
 
         // Saves a cropped mouth frame to the buffer; triggers inferencing once 75 frames are captured
-        const saveFrame = (croppedData: any) => {
-            frameBuffer.current.push(croppedData)
 
-            progressRef.current?.updateCount(frameBuffer.current.length)
-
-            if (frameBuffer.current.length === 75) {
-                console.log("75 Frames Captured!")
-                isCapturing.value = false
-                setAppState('inferencing')
-            }
-        }
 
         // Commented-out frame output: crops the mouth region per frame using the resize plugin,
         // encodes as base64 rgb, and hands off to saveFrameBuffer for LipNet inference
@@ -452,6 +442,17 @@ export default function FaceDetectionScreen(): ReactNode {
         // }
         // send frameBuffer to LipNet, then clear it
     }
+            const saveFrame = (croppedData: any) => {
+            frameBuffer.current.push(croppedData)
+
+            progressRef.current?.updateCount(frameBuffer.current.length)
+
+            if (frameBuffer.current.length === 75) {
+                console.log("75 Frames Captured!")
+                isCapturing.value = false
+                setAppState('inferencing')
+            }
+        }
 
     // const FrameOnJS = useRunOnJS((cropData: CropResult) => {
     //     // if (typeof cropData !== 'string'){
@@ -466,7 +467,6 @@ export default function FaceDetectionScreen(): ReactNode {
         pixelFormat: 'yuv',
         onFrame: (frame) => {
             'worklet';
-            console.log("testing frameOutput Print")
             scheduleOnRN(sayHello, "hello")
             try {
                 frameWidth.value = frame.width;
