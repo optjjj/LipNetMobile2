@@ -310,31 +310,31 @@ export default function FaceDetectionScreen(): ReactNode {
     })
 
     // Animated style for the face bounding box overlay (green border)
-    const boundingBoxStyle = useAnimatedStyle(() => ({ // face box
-        position: 'absolute',
-        borderWidth: 4,
-        borderLeftColor: 'rgb(0,255,0)',
-        borderRightColor: 'rgb(0,255,0)',
-        borderBottomColor: 'rgb(0,255,0)',
-        borderTopColor: 'rgb(0,255,0)',
-        width: aFaceW.value,
-        height: aFaceH.value,
-        left: aFaceX.value,
-        top: aFaceY.value
+    // const boundingBoxStyle = useAnimatedStyle(() => ({ // face box
+    //     position: 'absolute',
+    //     borderWidth: 4,
+    //     borderLeftColor: 'rgb(0,255,0)',
+    //     borderRightColor: 'rgb(0,255,0)',
+    //     borderBottomColor: 'rgb(0,255,0)',
+    //     borderTopColor: 'rgb(0,255,0)',
+    //     width: aFaceW.value,
+    //     height: aFaceH.value,
+    //     left: aFaceX.value,
+    //     top: aFaceY.value
 
-        // width: withTiming( aFaceW.value, {
-        //   duration: 100
-        // } ),
-        // height: withTiming( aFaceH.value, {
-        //   duration: 100
-        // } ),
-        // left: withTiming( aFaceX.value, {
-        //   duration: 100
-        // } ),
-        // top: withTiming( aFaceY.value, {
-        //   duration: 100
-        // } )
-    }))
+    //     // width: withTiming( aFaceW.value, {
+    //     //   duration: 100
+    //     // } ),
+    //     // height: withTiming( aFaceH.value, {
+    //     //   duration: 100
+    //     // } ),
+    //     // left: withTiming( aFaceX.value, {
+    //     //   duration: 100
+    //     // } ),
+    //     // top: withTiming( aFaceY.value, {
+    //     //   duration: 100
+    //     // } )
+    // }))
 
     // Animated style for the lip/mouth bounding box overlay (red border),
     // rotated by tiltAmount to track head tilt — this defines the LipNet crop region
@@ -470,6 +470,7 @@ export default function FaceDetectionScreen(): ReactNode {
   onFrame: (frame) => {
     'worklet';
     sayHello("whats up")
+    console.log ("testing log printo")
     try {
         frameWidth.value = frame.width;
         frameHeight.value = frame.height;
@@ -493,6 +494,9 @@ export default function FaceDetectionScreen(): ReactNode {
     //       dataType: 'base64'
     //     })
     //     runOnJS(saveFrameBuffer)(croppedMouth);
+      }
+      catch (error){
+        console.error('Cropping Error: ${error.message}')
       }
      finally{
       frame.dispose()
