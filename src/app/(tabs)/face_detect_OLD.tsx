@@ -554,7 +554,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                 </View>
 
                                 {/* Animated face and lip bounding box overlays */}
-                                <Animated.View style={boundingBoxStyle} />
+                                {/* <Animated.View style={boundingBoxStyle} /> */}
                                 <Animated.View style={lipBoxStyle} />
 
                                 {/* Skia canvas for lip contour point visualization */}
