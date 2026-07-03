@@ -449,12 +449,12 @@ export default function FaceDetectionScreen(): ReactNode {
         // send frameBuffer to LipNet, then clear it
     }
 
-    const FrameOnJS = useRunOnJS((cropData: CropResult) => {
-        // if (typeof cropData !== 'string'){
-        //     return;
-        // }
-        saveFrameBuffer(cropData)
-    }, [])
+    // const FrameOnJS = useRunOnJS((cropData: CropResult) => {
+    //     // if (typeof cropData !== 'string'){
+    //     //     return;
+    //     // }
+    //     saveFrameBuffer(cropData)
+    // }, [])
 
     const sayHello = (name: string) => {
         console.log(`Hello ${name}, I am running on the JS Thread!`)
