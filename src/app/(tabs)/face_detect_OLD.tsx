@@ -467,6 +467,7 @@ export default function FaceDetectionScreen(): ReactNode {
         pixelFormat: 'yuv',
         onFrame: (frame) => {
             'worklet';
+            console.log("frameoutput is being entered at least")
             scheduleOnRN(sayHello, "hello")
             try {
                 frameWidth.value = frame.width;
@@ -519,14 +520,15 @@ export default function FaceDetectionScreen(): ReactNode {
                             <>
                                 <Camera
                                     ref={camera}
+                                    isActive={true}
                                     style={StyleSheet.absoluteFill}
                                     outputs={[videoOutput, frameOutput]}
                                     constraints={[
-                                        //{ resolutionBias: videoOutput },
+                                        { resolutionBias: videoOutput },
                                         { binned: true },
                                         { fps: 25 }
                                     ]}
-                                    isActive={true}
+                                    
 
                                     device={cameraDevice}
                                     orientationSource={'device'}
