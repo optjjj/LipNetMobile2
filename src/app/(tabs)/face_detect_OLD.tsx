@@ -144,7 +144,8 @@ export default function FaceDetectionScreen(): ReactNode {
         runContours: true,
         runLandmarks: false,
         windowWidth: width,
-        windowHeight: height
+        windowHeight: height,
+        autoMode: true
     }).current
 
     const FaceDetector = useFaceDetector(faceDetectorOptions)
@@ -292,9 +293,9 @@ export default function FaceDetectionScreen(): ReactNode {
 
             mouthW.value = LipNetHeight
             mouthH.value = LipNetWidth
-            mouthX.value = (LipCenterX - LipNetWidth / 2) - width
-            mouthY.value = LipCenterY - offsetY - LipNetHeight / 2
-            console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value)
+            mouthX.value = (LipCenterX - LipNetWidth / 4) - width
+            mouthY.value = LipCenterY - offsetY - LipNetHeight / 4
+            
             cropRegionShared.value = {
                 left: (LipCenterX - LipNetWidth / 2) - width,
                 top: LipCenterY - offsetY - LipNetHeight / 2,
@@ -303,6 +304,7 @@ export default function FaceDetectionScreen(): ReactNode {
             }
 
             mouthX.value = width - LipCenterX
+            console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value)
 
             // LIP CONTOUR DRAWING
 
@@ -547,7 +549,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                         { fps: 25 }
                                     ]}
                                     
-
+                                    
                                     device={cameraDevice}
                                     
                                     orientationSource={'device'}
@@ -582,6 +584,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                         strokeWidth={4}
                                         strokeCap={'round'}
                                         zIndex={100}
+                                        
                                     />
                                 </Canvas>
 
