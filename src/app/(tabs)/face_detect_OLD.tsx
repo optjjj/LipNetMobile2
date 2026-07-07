@@ -243,7 +243,10 @@ export default function FaceDetectionScreen(): ReactNode {
         }
 
         const contours = faces.value[0]?.contours;
-        if (!contours) return [];
+        if (!contours) {
+            console.log("LipMeshPoints stopped because no contours were detected")
+            return []
+        }
 
         const {
             UPPER_LIP_TOP,
