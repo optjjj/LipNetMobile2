@@ -32,6 +32,7 @@ import {
 import {
     Face,
     FaceDetectorOptions,
+    useFaceDetector
 } from 'react-native-vision-camera-face-detector'
 import Animated, {
     useAnimatedStyle,
@@ -145,6 +146,8 @@ export default function FaceDetectionScreen(): ReactNode {
         windowWidth: width,
         windowHeight: height
     }).current
+
+    const FaceDetector = useFaceDetector(faceDetectorOptions)
 
     type CropValue = { left: number, top: number, width: number, height: number }
 
@@ -470,7 +473,11 @@ export default function FaceDetectionScreen(): ReactNode {
             'worklet';
             console.log("frameoutput is being entered at least")
             scheduleOnRN(sayHello, "hello")
+
+            const faceValue = FaceDetector.detectFaces(frame)
+
             try {
+                faces.value = faceValue
                 frameWidth.value = frame.width;
                 frameHeight.value = frame.height;
                 isCapturing.value = false
@@ -497,7 +504,7 @@ export default function FaceDetectionScreen(): ReactNode {
                 //     runOnJS(saveFrameBuffer)(croppedMouth);
             }
             catch (error) {
-                console.error('Cropping Error: ${error.message}')
+                console.error('Cropping Error: ', {error})
             }
             finally {
                 frame.dispose()
