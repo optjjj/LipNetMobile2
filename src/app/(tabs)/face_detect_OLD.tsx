@@ -18,18 +18,18 @@ import {
 import {
     CameraPosition,
     CameraRef,
+    Camera,
     useCameraDevice,
     useCameraPermission,
     useVideoOutput,
-    Frame,
-    useFrameOutput
+    useFrameOutput,
+    Frame
 } from 'react-native-vision-camera'
 import {
     SafeAreaProvider,
     useSafeAreaInsets
 } from 'react-native-safe-area-context'
 import {
-    Camera,
     Face,
     FaceDetectorOptions,
 } from 'react-native-vision-camera-face-detector'
@@ -232,8 +232,8 @@ export default function FaceDetectionScreen(): ReactNode {
     // Scales coordinates to match screen space, computes the LipNet mouth bounding box,
     // and applies a tilt correction so the crop tracks head rotation.
     const LipMeshPoints = useDerivedValue(() => {
-        //scheduleOnRN((greeting) => console.log(greeting), "Hello from RN Runtime");
-        scheduleOnRN(sayHello, "hello")
+        // scheduleOnRN((greeting) => console.log(greeting), "Hello from RN Runtime");
+        // scheduleOnRN(sayHello, "hello")
         if (faces.value.length === 0) return [];
 
         const contours = faces.value[0]?.contours;
@@ -465,8 +465,10 @@ export default function FaceDetectionScreen(): ReactNode {
 
     const frameOutput = useFrameOutput({
         pixelFormat: 'yuv',
+        dropFramesWhileBusy: true,
         onFrame: (frame) => {
             'worklet';
+            console.log("frameoutput is being entered at least")
             scheduleOnRN(sayHello, "hello")
             try {
                 frameWidth.value = frame.width;
@@ -519,22 +521,23 @@ export default function FaceDetectionScreen(): ReactNode {
                             <>
                                 <Camera
                                     ref={camera}
+                                    isActive={true}
                                     style={StyleSheet.absoluteFill}
-                                    outputs={[videoOutput, frameOutput]}
+                                    outputs={[frameOutput, videoOutput]}
                                     constraints={[
-                                        //{ resolutionBias: videoOutput },
+                                        { resolutionBias: videoOutput },
                                         { binned: true },
                                         { fps: 25 }
                                     ]}
-                                    isActive={true}
+                                    
 
                                     device={cameraDevice}
+                                    
                                     orientationSource={'device'}
                                     onError={handleCameraMountError}
-                                    onFacesDetected={handleFacesDetected}
-                                    {...faceDetectorOptions}
-                                    autoMode={false}
-                                    cameraFacing={'front'}
+                                    // onFacesDetected={handleFacesDetected}
+                                    // {...faceDetectorOptions}
+                                    //cameraFacing={'front'}
                                     resizeMode='cover'
                                 />
 
