@@ -555,7 +555,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                     // onFacesDetected={handleFacesDetected}
                                     // {...faceDetectorOptions}
                                     //cameraFacing={'front'}
-                                    resizeMode='cover'
+                                    //resizeMode='cover'
                                 />
 
                                 <View style={styles.container}>
@@ -581,6 +581,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                         color='cyan'
                                         strokeWidth={4}
                                         strokeCap={'round'}
+                                        zIndex={100}
                                     />
                                 </Canvas>
 
