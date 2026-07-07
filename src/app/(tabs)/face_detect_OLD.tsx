@@ -471,10 +471,11 @@ export default function FaceDetectionScreen(): ReactNode {
         dropFramesWhileBusy: true,
         onFrame: (frame) => {
             'worklet';
-            console.log("frameoutput is being entered at least")
+            const faceValue = FaceDetector.detectFaces(frame)
+            console.log(faceValue)
             scheduleOnRN(sayHello, "hello")
 
-            const faceValue = FaceDetector.detectFaces(frame)
+
 
             try {
                 faces.value = faceValue
