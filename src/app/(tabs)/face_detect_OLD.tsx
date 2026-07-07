@@ -237,7 +237,10 @@ export default function FaceDetectionScreen(): ReactNode {
     const LipMeshPoints = useDerivedValue(() => {
         // scheduleOnRN((greeting) => console.log(greeting), "Hello from RN Runtime");
         // scheduleOnRN(sayHello, "hello")
-        if (faces.value.length === 0) return [];
+        if (faces.value.length === 0) {
+            console.log("LipMeshPoints Returned due to faces.value.length being 0")
+            return [];
+        }
 
         const contours = faces.value[0]?.contours;
         if (!contours) return [];
