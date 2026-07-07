@@ -294,7 +294,7 @@ export default function FaceDetectionScreen(): ReactNode {
             mouthH.value = LipNetWidth
             mouthX.value = (LipCenterX - LipNetWidth / 2) - width
             mouthY.value = LipCenterY - offsetY - LipNetHeight / 2
-
+            console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value)
             cropRegionShared.value = {
                 left: (LipCenterX - LipNetWidth / 2) - width,
                 top: LipCenterY - offsetY - LipNetHeight / 2,
