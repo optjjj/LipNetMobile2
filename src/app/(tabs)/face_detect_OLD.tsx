@@ -480,11 +480,14 @@ export default function FaceDetectionScreen(): ReactNode {
                 faces.value = faceValue
                 frameWidth.value = frame.width;
                 frameHeight.value = frame.height;
-                isCapturing.value = false
+                
+
+                if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0){
                 const result = crop(frame, {
                     cropRegion: cropRegionShared.value,
                     includeImageBase64: true,
                 });
+            }
                 //scheduleOnRN(saveFrameBuffer, result)
 
                 scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
