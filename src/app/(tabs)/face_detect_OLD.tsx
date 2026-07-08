@@ -332,7 +332,7 @@ export default function FaceDetectionScreen(): ReactNode {
             const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
             const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
 
-            tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * -0.75
+            tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
 
             const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
             const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
@@ -355,8 +355,8 @@ export default function FaceDetectionScreen(): ReactNode {
                 height: LipNetWidth
             }
 
-            console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value, "Scale: ", scale, "Lip Center X: ", LipCenterX, "Lip Center Y: ", LipCenterY, "Top Center: ", topCenterPoint, "Bottom Center: ", bottomCenterPoint, "offset X: ", offsetX)
-            console.log("Frame Width: ", frameWidth.value, "Frame Height: ", frameHeight.value)
+            // console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value, "Scale: ", scale, "Lip Center X: ", LipCenterX, "Lip Center Y: ", LipCenterY, "Top Center: ", topCenterPoint, "Bottom Center: ", bottomCenterPoint, "offset X: ", offsetX)
+            // console.log("Frame Width: ", frameWidth.value, "Frame Height: ", frameHeight.value)
 
             // LIP CONTOUR DRAWING
 
@@ -365,7 +365,7 @@ export default function FaceDetectionScreen(): ReactNode {
                 const centeredX = scaledX - offsetX
                 const mirroredX = width - centeredX
                 const centeredY = p.y * scale - offsetY
-                return vec(mirroredX, centeredY)
+                return vec(p.x, p.y)
             })
         }
         return []
