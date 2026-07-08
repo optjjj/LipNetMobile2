@@ -407,10 +407,10 @@ export default function FaceDetectionScreen(): ReactNode {
         borderRightColor: 'rgb(255, 0, 0)',
         borderBottomColor: 'rgb(255, 0, 0)',
         borderTopColor: 'rgb(255, 0, 0)',
-        width: 128, //mouthH.value,
-        height: 64,//mouthW.value,
-        left: 300,//mouthX.value,
-        top: 300,//mouthY.value,
+        width: mouthH.value,
+        height: mouthW.value,
+        left: mouthX.value,
+        top: mouthY.value,
 
         // width: withTiming( mouthH.value, {
         //   duration: 100
