@@ -230,6 +230,58 @@ export default function FaceDetectionScreen(): ReactNode {
         }
     };
 
+
+    const frameOutput = useFrameOutput({
+        pixelFormat: 'yuv',
+        dropFramesWhileBusy: true,
+        onFrame: (frame) => {
+            'worklet';
+            const faceValue = FaceDetector.detectFaces(frame)
+            console.log(faceValue)
+            scheduleOnRN(sayHello, "hello")
+
+
+
+            try {
+                faces.value = faceValue
+                frameWidth.value = frame.width;
+                frameHeight.value = frame.height;
+                
+
+                if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0){
+                const result = crop(frame, {
+                    cropRegion: cropRegionShared.value,
+                    includeImageBase64: true,
+                });
+            }
+                //scheduleOnRN(saveFrameBuffer, result)
+
+                scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
+
+                //   if (isCapturing.value === true && mouthW.value > 0){
+                //     const croppedMouth = resize(frame, {
+                //       scale: {width: 128, height: 64},
+                //       crop: {
+                //         x: mouthX.value,
+                //         y: mouthY.value,
+                //         width: mouthW.value,
+                //         height: mouthH.value
+                //       },
+                //       pixelFormat: 'rgb',
+                //       dataType: 'base64'
+                //     })
+                //     runOnJS(saveFrameBuffer)(croppedMouth);
+            }
+            catch (error) {
+                console.error('Cropping Error: ', {error})
+            }
+            finally {
+                frame.dispose()
+            }
+        }
+    })
+
+
     // --------------- Animated / Derived Value Logic -------------------------
 
     // Derives real-time lip contour points from the faces shared value.
@@ -305,6 +357,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
             console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value, "Scale: ", scale, "Lip Center X: ", LipCenterX, "Lip Center Y: ", LipCenterY, "Top Center: ", topCenterPoint, "Bottom Center: ", bottomCenterPoint, "offset X: ", offsetX)
             console.log("Frame Width: ", frameWidth.value, "Frame Height: ", frameHeight.value)
+
             // LIP CONTOUR DRAWING
 
             return allLipPoints.map(p => {
@@ -473,55 +526,6 @@ export default function FaceDetectionScreen(): ReactNode {
 
 
 
-    const frameOutput = useFrameOutput({
-        pixelFormat: 'yuv',
-        dropFramesWhileBusy: true,
-        onFrame: (frame) => {
-            'worklet';
-            const faceValue = FaceDetector.detectFaces(frame)
-            console.log(faceValue)
-            scheduleOnRN(sayHello, "hello")
-
-
-
-            try {
-                faces.value = faceValue
-                frameWidth.value = frame.width;
-                frameHeight.value = frame.height;
-                
-
-                if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0){
-                const result = crop(frame, {
-                    cropRegion: cropRegionShared.value,
-                    includeImageBase64: true,
-                });
-            }
-                //scheduleOnRN(saveFrameBuffer, result)
-
-                scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
-
-                //   if (isCapturing.value === true && mouthW.value > 0){
-                //     const croppedMouth = resize(frame, {
-                //       scale: {width: 128, height: 64},
-                //       crop: {
-                //         x: mouthX.value,
-                //         y: mouthY.value,
-                //         width: mouthW.value,
-                //         height: mouthH.value
-                //       },
-                //       pixelFormat: 'rgb',
-                //       dataType: 'base64'
-                //     })
-                //     runOnJS(saveFrameBuffer)(croppedMouth);
-            }
-            catch (error) {
-                console.error('Cropping Error: ', {error})
-            }
-            finally {
-                frame.dispose()
-            }
-        }
-    })
 
     return (
         <>
