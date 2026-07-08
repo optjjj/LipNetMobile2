@@ -89,8 +89,8 @@ export default function FaceDetectionScreen(): ReactNode {
         height
     } = useWindowDimensions()
 
-    const frameWidth = useSharedValue(720)
-    const frameHeight = useSharedValue(1280)
+    const frameWidth = useSharedValue(500)
+    const frameHeight = useSharedValue(1000)
 
     // State Machine
     const [appState, setAppState] = useState<StateMachine>('idle');
@@ -337,16 +337,16 @@ export default function FaceDetectionScreen(): ReactNode {
             const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
             const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
 
-            const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scale - offsetX )
-            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale - offsetY )
+            const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 )//* scale - offsetX )
+            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 )//* scale - offsetY )
 
             const LipNetWidth = 128
             const LipNetHeight = 64
 
             mouthW.value = LipNetHeight
             mouthH.value = LipNetWidth
-            mouthX.value = (LipCenterX - (LipNetWidth / 2)) - width
-            mouthY.value = LipCenterY - offsetY - (LipNetHeight / 2)
+            mouthX.value = (LipCenterX - (LipNetWidth / 2))
+            mouthY.value = LipCenterY - (LipNetHeight / 2)
             
             cropRegionShared.value = {
                 left: (LipCenterX - LipNetWidth / 2) - width,
