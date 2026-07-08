@@ -304,7 +304,7 @@ export default function FaceDetectionScreen(): ReactNode {
             }
 
             mouthX.value = width - LipCenterX
-            console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value)
+            console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value, "Scale: ", scale)
 
             // LIP CONTOUR DRAWING
 
