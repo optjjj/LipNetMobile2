@@ -216,11 +216,7 @@ export default function FaceDetectionScreen(): ReactNode {
         handleDoneState()
     }
 
-    const [LipMeshPoints, setLipMeshPoints] = useState<{ x: number; y: number }[]>([])
-    const saveLipPoints = (points: { x: number; y: number }[]) => {
-        setLipMeshPoints(points)
-        console.log("Saving lip points...")
-    }
+    const lipPoints = useSharedValue <{x: number; y:number}[]>([])
 
     // Buttons
 
@@ -269,7 +265,8 @@ export default function FaceDetectionScreen(): ReactNode {
                         ...LOWER_LIP_TOP,
                         ...LOWER_LIP_BOTTOM
                     ]
-                    scheduleOnRN(saveLipPoints, allLipPoints)
+
+                    lipPoints.value = allLipPoints
 
                         // LIP TILT CALCULATION
 
@@ -619,7 +616,7 @@ return (
                             {/* Skia canvas for lip contour point visualization */}
                             <Canvas style={StyleSheet.absoluteFill} pointerEvents='none'>
                                 <Points
-                                    points={LipMeshPoints}
+                                    points={lipPoints}
                                     mode='points'
                                     color='cyan'
                                     strokeWidth={4}
