@@ -217,6 +217,14 @@ export default function FaceDetectionScreen(): ReactNode {
         handleDoneState()
     }
 
+    const LipMeshPoints: {x: Number; y: Number} = {x: 0, y: 0}
+    const saveLipPoints = (x: any) => {
+        x.map(p => {
+            LipMeshPoints.x = p.x
+            LipMeshPoints.y = p.y
+        })
+    }
+
     // Buttons
 
     const buttonProps = () => {
@@ -242,21 +250,75 @@ export default function FaceDetectionScreen(): ReactNode {
                 faces.value = faceValue
                 frameWidth.value = frame.width;
                 frameHeight.value = frame.height;
+                const CropRegion = ({left: 200, top: 200, width: 128, height: 64})
+
+                const contours = faces.value[0]?.contours
+                if (!contours) {
+                    console.log("No Contours!")
+                    return []
+                }
+
+                const {
+                    UPPER_LIP_TOP,
+                    UPPER_LIP_BOTTOM,
+                    LOWER_LIP_TOP,
+                    LOWER_LIP_BOTTOM
+                } = contours as Record<string, { x: number; y: number }[]>;
+
+                if (UPPER_LIP_TOP?.length > 0 && LOWER_LIP_BOTTOM?.length > 0) {
+                    const allLipPoints = [
+                        ...UPPER_LIP_TOP,
+                        ...UPPER_LIP_BOTTOM,
+                        ...LOWER_LIP_TOP,
+                        ...LOWER_LIP_BOTTOM
+                    ]
                 
 
-                if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0){
-                const result = crop(frame, {
-                    cropRegion: cropRegionShared.value,
-                    includeImageBase64: true,
-                });
+                        // LIP TILT CALCULATION
 
-                scheduleOnRN(saveFrameBuffer, result)
-                scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
+                    const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
+                    const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
+
+                    tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
+
+                        // LIP BOX CALCULATION
+
+                    const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
+                    const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
+
+                    const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2)//* scale - offsetX )
+                    const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2)//* scale - offsetY )
+
+                    const LipNetWidth = 128
+                    const LipNetHeight = 64
+
+                    mouthW.value = LipNetHeight
+                    mouthH.value = LipNetWidth
+                    mouthX.value = (LipCenterX - (LipNetWidth / 2))
+                    mouthY.value = LipCenterY - (LipNetHeight / 2)
+
+                    CropRegion.left = mouthX.value
+                    CropRegion.top = mouthY.value
+
+                    scheduleOnRN(saveLipPoints, allLipPoints)
             }
-                
+
+                    // ENDING FINAL VALUES TO CROP
+
+                    if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0) {
+                        const result = crop(frame, {
+                            cropRegion: CropRegion,
+                            includeImageBase64: true,
+                        });
+
+                        scheduleOnRN(saveFrameBuffer, result)
+                        scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
+                    
+                }
+
             }
             catch (error) {
-                console.error('Cropping Error: ', {error})
+                console.error('Cropping Error: ', { error })
             }
             finally {
                 frame.dispose()
@@ -270,374 +332,368 @@ export default function FaceDetectionScreen(): ReactNode {
     // Derives real-time lip contour points from the faces shared value.
     // Scales coordinates to match screen space, computes the LipNet mouth bounding box,
     // and applies a tilt correction so the crop tracks head rotation.
-    const LipMeshPoints = useDerivedValue(() => {
-        // scheduleOnRN((greeting) => console.log(greeting), "Hello from RN Runtime");
-        // scheduleOnRN(sayHello, "hello")
-        if (faces.value.length === 0) {
-            console.log("LipMeshPoints Returned due to faces.value.length being 0")
-            return [];
-        }
+//     const LipMeshPoints = useDerivedValue(() => {
+//         // scheduleOnRN((greeting) => console.log(greeting), "Hello from RN Runtime");
+//         // scheduleOnRN(sayHello, "hello")
+//         if (faces.value.length === 0) {
+//             console.log("LipMeshPoints Returned due to faces.value.length being 0")
+//             return [];
+//         }
 
-        const contours = faces.value[0]?.contours;
-        if (!contours) {
-            console.log("LipMeshPoints stopped because no contours were detected")
-            return []
-        }
+//         const contours = faces.value[0]?.contours;
+//         if (!contours) {
+//             console.log("LipMeshPoints stopped because no contours were detected")
+//             return []
+//         }
 
-        const {
-            UPPER_LIP_TOP,
-            UPPER_LIP_BOTTOM,
-            LOWER_LIP_TOP,
-            LOWER_LIP_BOTTOM
-        } = contours as Record<string, { x: number; y: number }[]>;
-
-        if (UPPER_LIP_TOP?.length > 0 && LOWER_LIP_BOTTOM?.length > 0) {
-            const allLipPoints = [
-                ...UPPER_LIP_TOP,
-                ...UPPER_LIP_BOTTOM,
-                ...LOWER_LIP_TOP,
-                ...LOWER_LIP_BOTTOM
-            ]
-
-            // Scale Factors
-            // const scaleFactorX = (screen.width / width)
-            // const scaleFactorY = (screen.height / height)
-
-            const additionalYOffset = 45
-
-            const scale = Math.max(width / frameWidth.value, height / frameHeight.value);
-            const offsetX = (frameWidth.value * scale - width) / 2 ;
-            const offsetY = (frameHeight.value * scale - height) / 2 + additionalYOffset;
+//         const {
+//             UPPER_LIP_TOP,
+//             UPPER_LIP_BOTTOM,
+//             LOWER_LIP_TOP,
+//             LOWER_LIP_BOTTOM
+//         } = contours as Record<string, { x: number; y: number }[]>;
 
 
-            // LIP TILT CALCULATION
 
-            const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
-            const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
+//         // Scale Factors
+//         // const scaleFactorX = (screen.width / width)
+//         // const scaleFactorY = (screen.height / height)
 
-            tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
+//         const additionalYOffset = 45
 
-            const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
-            const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
+//         const scale = Math.max(width / frameWidth.value, height / frameHeight.value);
+//         const offsetX = (frameWidth.value * scale - width) / 2;
+//         const offsetY = (frameHeight.value * scale - height) / 2 + additionalYOffset;
 
-            const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 )//* scale - offsetX )
-            const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 )//* scale - offsetY )
 
-            const LipNetWidth = 128
-            const LipNetHeight = 64
+//         // LIP TILT CALCULATION
 
-            mouthW.value = LipNetHeight
-            mouthH.value = LipNetWidth
-            mouthX.value = (LipCenterX - (LipNetWidth / 2))
-            mouthY.value = LipCenterY - (LipNetHeight / 2)
-            
-            cropRegionShared.value = {
-                left: (LipCenterX - LipNetWidth / 2) - width,
-                top: LipCenterY - offsetY - LipNetHeight / 2,
-                width: LipNetHeight,
-                height: LipNetWidth
-            }
+//         const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
+//         const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
 
-            // console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value, "Scale: ", scale, "Lip Center X: ", LipCenterX, "Lip Center Y: ", LipCenterY, "Top Center: ", topCenterPoint, "Bottom Center: ", bottomCenterPoint, "offset X: ", offsetX)
-            // console.log("Frame Width: ", frameWidth.value, "Frame Height: ", frameHeight.value)
+//         tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
 
-            // LIP CONTOUR DRAWING
+//         const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
+//         const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
 
-            return allLipPoints.map(p => {
-                const scaledX = p.x * scale
-                const centeredX = scaledX - offsetX
-                const mirroredX = width - centeredX
-                const centeredY = p.y * scale - offsetY
-                return vec(p.x, p.y)
-            })
-        }
-        return []
-    })
+//         const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2)//* scale - offsetX )
+//         const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2)//* scale - offsetY )
 
-    // Animated style for the face bounding box overlay (green border)
-    // const boundingBoxStyle = useAnimatedStyle(() => ({ // face box
-    //     position: 'absolute',
-    //     borderWidth: 4,
-    //     borderLeftColor: 'rgb(0,255,0)',
-    //     borderRightColor: 'rgb(0,255,0)',
-    //     borderBottomColor: 'rgb(0,255,0)',
-    //     borderTopColor: 'rgb(0,255,0)',
-    //     width: aFaceW.value,
-    //     height: aFaceH.value,
-    //     left: aFaceX.value,
-    //     top: aFaceY.value
+//         const LipNetWidth = 128
+//         const LipNetHeight = 64
 
-    //     // width: withTiming( aFaceW.value, {
-    //     //   duration: 100
-    //     // } ),
-    //     // height: withTiming( aFaceH.value, {
-    //     //   duration: 100
-    //     // } ),
-    //     // left: withTiming( aFaceX.value, {
-    //     //   duration: 100
-    //     // } ),
-    //     // top: withTiming( aFaceY.value, {
-    //     //   duration: 100
-    //     // } )
-    // }))
+//         mouthW.value = LipNetHeight
+//         mouthH.value = LipNetWidth
+//         mouthX.value = (LipCenterX - (LipNetWidth / 2))
+//         mouthY.value = LipCenterY - (LipNetHeight / 2)
 
-    // Animated style for the lip/mouth bounding box overlay (red border),
-    // rotated by tiltAmount to track head tilt — this defines the LipNet crop region
-    const lipBoxStyle = useAnimatedStyle(() => ({ // lip box
-        position: 'absolute',
-        borderWidth: 4,
-        borderLeftColor: 'rgb(255, 0, 0)',
-        borderRightColor: 'rgb(255, 0, 0)',
-        borderBottomColor: 'rgb(255, 0, 0)',
-        borderTopColor: 'rgb(255, 0, 0)',
-        width: mouthH.value,
-        height: mouthW.value,
-        left: mouthX.value,
-        top: mouthY.value,
+//         cropRegionShared.value = {
+//             left: (LipCenterX - LipNetWidth / 2) - width,
+//             top: LipCenterY - offsetY - LipNetHeight / 2,
+//             width: LipNetHeight,
+//             height: LipNetWidth
+//         }
 
-        // width: withTiming( mouthH.value, {
-        //   duration: 100
-        // } ),
-        // height: withTiming( mouthW.value, {
-        //   duration: 100
-        // } ),
-        // left: withTiming( mouthX.value, {
-        //   duration: 100
-        // } ),
-        // top: withTiming( mouthY.value, {
-        //   duration: 100
-        // } ),
-        transform: [
-            { rotateZ: `${tiltAmount.value}rad` }
-        ]
-    }))
+//         // console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value, "Scale: ", scale, "Lip Center X: ", LipCenterX, "Lip Center Y: ", LipCenterY, "Top Center: ", topCenterPoint, "Bottom Center: ", bottomCenterPoint, "offset X: ", offsetX)
+//         // console.log("Frame Width: ", frameWidth.value, "Frame Height: ", frameHeight.value)
 
-    // Request camera permission on mount if not already granted
-    useEffect(() => {
-        if (!hasPermission) {
-            requestPermission()
-        }
-    }, [hasPermission])
+//         // LIP CONTOUR DRAWING
 
-    // Handles camera mount error events
-    function handleCameraMountError(error: any) {
-        console.error('camera mount error', error)
+//         return allLipPoints.map(p => {
+//             const scaledX = p.x * scale
+//             const centeredX = scaledX - offsetX
+//             const mirroredX = width - centeredX
+//             const centeredY = p.y * scale - offsetY
+//             return vec(p.x, p.y)
+//         })
+//     }
+//         return []
+// })
+
+// Animated style for the face bounding box overlay (green border)
+// const boundingBoxStyle = useAnimatedStyle(() => ({ // face box
+//     position: 'absolute',
+//     borderWidth: 4,
+//     borderLeftColor: 'rgb(0,255,0)',
+//     borderRightColor: 'rgb(0,255,0)',
+//     borderBottomColor: 'rgb(0,255,0)',
+//     borderTopColor: 'rgb(0,255,0)',
+//     width: aFaceW.value,
+//     height: aFaceH.value,
+//     left: aFaceX.value,
+//     top: aFaceY.value
+
+//     // width: withTiming( aFaceW.value, {
+//     //   duration: 100
+//     // } ),
+//     // height: withTiming( aFaceH.value, {
+//     //   duration: 100
+//     // } ),
+//     // left: withTiming( aFaceX.value, {
+//     //   duration: 100
+//     // } ),
+//     // top: withTiming( aFaceY.value, {
+//     //   duration: 100
+//     // } )
+// }))
+
+// Animated style for the lip/mouth bounding box overlay (red border),
+// rotated by tiltAmount to track head tilt — this defines the LipNet crop region
+const lipBoxStyle = useAnimatedStyle(() => ({ // lip box
+    position: 'absolute',
+    borderWidth: 4,
+    borderLeftColor: 'rgb(255, 0, 0)',
+    borderRightColor: 'rgb(255, 0, 0)',
+    borderBottomColor: 'rgb(255, 0, 0)',
+    borderTopColor: 'rgb(255, 0, 0)',
+    width: mouthH.value,
+    height: mouthW.value,
+    left: mouthX.value,
+    top: mouthY.value,
+
+    // width: withTiming( mouthH.value, {
+    //   duration: 100
+    // } ),
+    // height: withTiming( mouthW.value, {
+    //   duration: 100
+    // } ),
+    // left: withTiming( mouthX.value, {
+    //   duration: 100
+    // } ),
+    // top: withTiming( mouthY.value, {
+    //   duration: 100
+    // } ),
+    transform: [
+        { rotateZ: `${tiltAmount.value}rad` }
+    ]
+}))
+
+// Request camera permission on mount if not already granted
+useEffect(() => {
+    if (!hasPermission) {
+        requestPermission()
+    }
+}, [hasPermission])
+
+// Handles camera mount error events
+function handleCameraMountError(error: any) {
+    console.error('camera mount error', error)
+}
+
+// Callback from Camera's onFacesDetected prop (JS thread).
+// Updates all face position and lip contour shared values, then
+// manages frame capture to build the buffer for LipNet inference.
+function handleFacesDetected(detectedFaces: Face[]): void {
+    faces.value = detectedFaces
+    //console.log( 'handleFacesDetected - detected', faces.value.length, 'faces' )
+
+    // If no faces detected, zero out all overlay shared values to hide the overlays
+    if (faces.value.length <= 0) {
+        aFaceW.value = 0
+        aFaceH.value = 0
+        aFaceX.value = 0
+        aFaceY.value = 0
+        mouthH.value = 0
+        mouthW.value = 0
+        mouthX.value = 0
+        mouthY.value = 0
+        return
     }
 
-    // Callback from Camera's onFacesDetected prop (JS thread).
-    // Updates all face position and lip contour shared values, then
-    // manages frame capture to build the buffer for LipNet inference.
-    function handleFacesDetected(detectedFaces: Face[]): void {
-        faces.value = detectedFaces
-        //console.log( 'handleFacesDetected - detected', faces.value.length, 'faces' )
+    const { bounds } = faces.value[0]
+    const {
+        width,
+        height,
+        x,
+        y,
+    } = bounds
+    const { contours } = faces.value[0]
 
-        // If no faces detected, zero out all overlay shared values to hide the overlays
-        if (faces.value.length <= 0) {
-            aFaceW.value = 0
-            aFaceH.value = 0
-            aFaceX.value = 0
-            aFaceY.value = 0
-            mouthH.value = 0
-            mouthW.value = 0
-            mouthX.value = 0
-            mouthY.value = 0
-            return
-        }
-
-        const { bounds } = faces.value[0]
-        const {
-            width,
-            height,
-            x,
-            y,
-        } = bounds
-        const { contours } = faces.value[0]
-
-        if (!contours) {
-            mouthH.value = 0;
-            mouthW.value = 0;
-            mouthX.value = 0;
-            mouthY.value = 0;
-            return;
-        }
-
-        aFaceW.value = width
-        aFaceH.value = height
-        aFaceX.value = x
-        aFaceY.value = y
-
-        // Saves a cropped mouth frame to the buffer; triggers inferencing once 75 frames are captured
-
-
-        // Commented-out frame output: crops the mouth region per frame using the resize plugin,
-        // encodes as base64 rgb, and hands off to saveFrameBuffer for LipNet inference
-
-
-        // if (appState === 'capturing'){
-
-        //   const croppedFrameData = 1
-        //   frameBuffer.current.push(croppedFrameData)
-        //   //const croppedFrameData = extractPixels(frame, mouthBox)
-
-        //   progressRef.current?.updateCount(frameBuffer.current.length);
-
-        //   if (frameBuffer.current.length >= 75){
-        //     console.log("75 Frames Captured")
-        //     setAppState('inferencing')
-        //   }
-        // }
-        // send frameBuffer to LipNet, then clear it
+    if (!contours) {
+        mouthH.value = 0;
+        mouthW.value = 0;
+        mouthX.value = 0;
+        mouthY.value = 0;
+        return;
     }
-            const saveFrame = (croppedData: any) => {
-            frameBuffer.current.push(croppedData)
 
-            progressRef.current?.updateCount(frameBuffer.current.length)
+    aFaceW.value = width
+    aFaceH.value = height
+    aFaceX.value = x
+    aFaceY.value = y
 
-            if (frameBuffer.current.length === 75) {
-                console.log("75 Frames Captured!")
-                isCapturing.value = false
-                setAppState('inferencing')
-            }
-        }
-
-    // const FrameOnJS = useRunOnJS((cropData: CropResult) => {
-    //     // if (typeof cropData !== 'string'){
-    //     //     return;
-    //     // }
-    //     saveFrameBuffer(cropData)
-    // }, [])
+    // Saves a cropped mouth frame to the buffer; triggers inferencing once 75 frames are captured
 
 
+    // Commented-out frame output: crops the mouth region per frame using the resize plugin,
+    // encodes as base64 rgb, and hands off to saveFrameBuffer for LipNet inference
 
 
-    return (
-        <>
-            <View
-                style={[
-                    StyleSheet.absoluteFill, {
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }
-                ]}
-            >
-                {hasPermission && cameraDevice ? (
-                    <>
-                        {cameraMounted && (
-                            <>
-                                <Camera
-                                    ref={camera}
-                                    isActive={true}
-                                    style={StyleSheet.absoluteFill}
-                                    outputs={[frameOutput, videoOutput]}
-                                    constraints={[
-                                        { resolutionBias: videoOutput },
-                                        { binned: true },
-                                        { fps: 25 }
-                                    ]}
-                                    
-                                    
-                                    device={cameraDevice}
-                                    
-                                    orientationSource={'device'}
-                                    onError={handleCameraMountError}
-                                    // onFacesDetected={handleFacesDetected}
-                                    // {...faceDetectorOptions}
-                                    //cameraFacing={'front'}
-                                    //resizeMode='cover'
-                                />
+    // if (appState === 'capturing'){
 
-                                <View style={styles.container}>
-                                    {appState === 'capturing' && (
-                                        <FrameProgressBar ref={progressRef} />
-                                    )}
+    //   const croppedFrameData = 1
+    //   frameBuffer.current.push(croppedFrameData)
+    //   //const croppedFrameData = extractPixels(frame, mouthBox)
 
-                                    {/* Control Button */}
-                                    <View style={styles.buttonContainer}>
-                                        <Button title={buttonProps().text} onPress={buttonProps().onPress} />
-                                    </View>
-                                </View>
+    //   progressRef.current?.updateCount(frameBuffer.current.length);
 
-                                {/* Animated face and lip bounding box overlays */}
-                                {/* <Animated.View style={boundingBoxStyle} /> */}
-                                <Animated.View style={lipBoxStyle} />
+    //   if (frameBuffer.current.length >= 75){
+    //     console.log("75 Frames Captured")
+    //     setAppState('inferencing')
+    //   }
+    // }
+    // send frameBuffer to LipNet, then clear it
+}
+const saveFrame = (croppedData: any) => {
+    frameBuffer.current.push(croppedData)
 
-                                {/* Skia canvas for lip contour point visualization */}
-                                <Canvas style={StyleSheet.absoluteFill} pointerEvents='none'>
-                                    <Points
-                                        points={LipMeshPoints}
-                                        mode='points'
-                                        color='cyan'
-                                        strokeWidth={4}
-                                        strokeCap={'round'}
-                                        zIndex={100}
-                                        
-                                    />
-                                </Canvas>
+    progressRef.current?.updateCount(frameBuffer.current.length)
 
-                                {cameraPaused && (
-                                    <Text
-                                        style={{
-                                            width: '100%',
-                                            backgroundColor: 'rgb(0,0,255)',
-                                            textAlign: 'center',
-                                            color: 'white'
-                                        }}
-                                    >
-                                        Camera is PAUSED
-                                    </Text>
+    if (frameBuffer.current.length === 75) {
+        console.log("75 Frames Captured!")
+        isCapturing.value = false
+        setAppState('inferencing')
+    }
+}
+
+// const FrameOnJS = useRunOnJS((cropData: CropResult) => {
+//     // if (typeof cropData !== 'string'){
+//     //     return;
+//     // }
+//     saveFrameBuffer(cropData)
+// }, [])
+
+
+
+
+return (
+    <>
+        <View
+            style={[
+                StyleSheet.absoluteFill, {
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }
+            ]}
+        >
+            {hasPermission && cameraDevice ? (
+                <>
+                    {cameraMounted && (
+                        <>
+                            <Camera
+                                ref={camera}
+                                isActive={true}
+                                style={StyleSheet.absoluteFill}
+                                outputs={[frameOutput, videoOutput]}
+                                constraints={[
+                                    { resolutionBias: videoOutput },
+                                    { binned: true },
+                                    { fps: 25 }
+                                ]}
+
+
+                                device={cameraDevice}
+
+                                orientationSource={'device'}
+                                onError={handleCameraMountError}
+                            // onFacesDetected={handleFacesDetected}
+                            // {...faceDetectorOptions}
+                            //cameraFacing={'front'}
+                            //resizeMode='cover'
+                            />
+
+                            <View style={styles.container}>
+                                {appState === 'capturing' && (
+                                    <FrameProgressBar ref={progressRef} />
                                 )}
-                            </>
-                        )}
 
-                        {!cameraMounted && (
-                            <Text
-                                style={{
-                                    width: '100%',
-                                    backgroundColor: 'rgb(255,255,0)',
-                                    textAlign: 'center'
-                                }}
-                            >
-                                Camera is NOT mounted
-                            </Text>
-                        )}
-                    </>
-                ) : (
-                    <Text
-                        style={{
-                            width: '100%',
-                            backgroundColor: 'rgb(255,0,0)',
-                            textAlign: 'center',
-                            color: 'white'
-                        }}
-                    >
-                        No camera device or permission
-                    </Text>
-                )}
-            </View>
+                                {/* Control Button */}
+                                <View style={styles.buttonContainer}>
+                                    <Button title={buttonProps().text} onPress={buttonProps().onPress} />
+                                </View>
+                            </View>
 
-            {/* Bottom control bar — reserved for future camera controls */}
-            <View
-                style={{
-                    position: 'absolute',
-                    bottom: 20 + +insets.bottom,
-                    left: 0,
-                    right: 0,
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}
-            >
-                <View
+                            {/* Animated face and lip bounding box overlays */}
+                            {/* <Animated.View style={boundingBoxStyle} /> */}
+                            <Animated.View style={lipBoxStyle} />
+
+                            {/* Skia canvas for lip contour point visualization */}
+                            <Canvas style={StyleSheet.absoluteFill} pointerEvents='none'>
+                                <Points
+                                    points={LipMeshPoints}
+                                    mode='points'
+                                    color='cyan'
+                                    strokeWidth={4}
+                                    strokeCap={'round'}
+                                    zIndex={100}
+
+                                />
+                            </Canvas>
+
+                            {cameraPaused && (
+                                <Text
+                                    style={{
+                                        width: '100%',
+                                        backgroundColor: 'rgb(0,0,255)',
+                                        textAlign: 'center',
+                                        color: 'white'
+                                    }}
+                                >
+                                    Camera is PAUSED
+                                </Text>
+                            )}
+                        </>
+                    )}
+
+                    {!cameraMounted && (
+                        <Text
+                            style={{
+                                width: '100%',
+                                backgroundColor: 'rgb(255,255,0)',
+                                textAlign: 'center'
+                            }}
+                        >
+                            Camera is NOT mounted
+                        </Text>
+                    )}
+                </>
+            ) : (
+                <Text
                     style={{
                         width: '100%',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-around'
+                        backgroundColor: 'rgb(255,0,0)',
+                        textAlign: 'center',
+                        color: 'white'
                     }}
                 >
-                </View>
+                    No camera device or permission
+                </Text>
+            )}
+        </View>
+
+        {/* Bottom control bar — reserved for future camera controls */}
+        <View
+            style={{
+                position: 'absolute',
+                bottom: 20 + +insets.bottom,
+                left: 0,
+                right: 0,
+                display: 'flex',
+                flexDirection: 'column'
+            }}
+        >
+            <View
+                style={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-around'
+                }}
+            >
             </View>
-        </>
-    );
+        </View>
+    </>
+);
 }
 
 
