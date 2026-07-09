@@ -216,12 +216,9 @@ export default function FaceDetectionScreen(): ReactNode {
         handleDoneState()
     }
 
-    const LipMeshPoints: {x: Number; y: Number} = {x: 0, y: 0}
-    const saveLipPoints = (x: any) => {
-        x.map(p => {
-            LipMeshPoints.x = p.x
-            LipMeshPoints.y = p.y
-        })
+    const [LipMeshPoints, setLipMeshPoints] = useState<{ x: number; y: number }[]>([])
+    const saveLipPoints = (points: { x: number; y: number }[]) => {
+        setLipMeshPoints(points)
         console.log("Saving lip points...")
     }
 
