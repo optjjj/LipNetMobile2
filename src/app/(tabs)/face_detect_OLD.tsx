@@ -170,7 +170,7 @@ export default function FaceDetectionScreen(): ReactNode {
         console.log(`Hello ${name}, I am running on the JS Thread!`)
     }
 
-    const cropRegionShared = useSharedValue<CropValue>({ left: 0, top: 0, width: 128, height: 64 })
+    const cropRegionShared = useSharedValue<CropValue>({ left: 200, top: 200, width: 128, height: 64 })
 
     // State Helper Functions
 
@@ -237,10 +237,6 @@ export default function FaceDetectionScreen(): ReactNode {
         onFrame: (frame) => {
             'worklet';
             const faceValue = FaceDetector.detectFaces(frame)
-            console.log(faceValue)
-            scheduleOnRN(sayHello, "hello")
-
-
 
             try {
                 faces.value = faceValue
@@ -253,24 +249,11 @@ export default function FaceDetectionScreen(): ReactNode {
                     cropRegion: cropRegionShared.value,
                     includeImageBase64: true,
                 });
-            }
-                //scheduleOnRN(saveFrameBuffer, result)
 
+                scheduleOnRN(saveFrameBuffer, result)
                 scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
-
-                //   if (isCapturing.value === true && mouthW.value > 0){
-                //     const croppedMouth = resize(frame, {
-                //       scale: {width: 128, height: 64},
-                //       crop: {
-                //         x: mouthX.value,
-                //         y: mouthY.value,
-                //         width: mouthW.value,
-                //         height: mouthH.value
-                //       },
-                //       pixelFormat: 'rgb',
-                //       dataType: 'base64'
-                //     })
-                //     runOnJS(saveFrameBuffer)(croppedMouth);
+            }
+                
             }
             catch (error) {
                 console.error('Cropping Error: ', {error})
