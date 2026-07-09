@@ -56,7 +56,6 @@ type StateMachine =
 
 
 // Progress Bar Logic
-
 export interface ProgressBarRef {
     updateCount: (count: number) => void;
 }
@@ -223,6 +222,7 @@ export default function FaceDetectionScreen(): ReactNode {
             LipMeshPoints.x = p.x
             LipMeshPoints.y = p.y
         })
+        console.log("Saving lip points...")
     }
 
     // Buttons
@@ -237,10 +237,10 @@ export default function FaceDetectionScreen(): ReactNode {
             default: return { text: 'Unknown', onPress: () => { } };
         }
     };
-
+    
 
     const frameOutput = useFrameOutput({
-        pixelFormat: 'yuv',
+        pixelFormat: 'rgb',
         dropFramesWhileBusy: true,
         onFrame: (frame) => {
             'worklet';
@@ -272,7 +272,7 @@ export default function FaceDetectionScreen(): ReactNode {
                         ...LOWER_LIP_TOP,
                         ...LOWER_LIP_BOTTOM
                     ]
-                
+                    scheduleOnRN(saveLipPoints, allLipPoints)
 
                         // LIP TILT CALCULATION
 
@@ -300,7 +300,7 @@ export default function FaceDetectionScreen(): ReactNode {
                     CropRegion.left = mouthX.value
                     CropRegion.top = mouthY.value
 
-                    scheduleOnRN(saveLipPoints, allLipPoints)
+
             }
 
                     // ENDING FINAL VALUES TO CROP
@@ -310,6 +310,8 @@ export default function FaceDetectionScreen(): ReactNode {
                             cropRegion: CropRegion,
                             includeImageBase64: true,
                         });
+
+                        
 
                         scheduleOnRN(saveFrameBuffer, result)
                         scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
