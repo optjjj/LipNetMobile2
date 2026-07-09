@@ -240,7 +240,7 @@ export default function FaceDetectionScreen(): ReactNode {
     
 
     const frameOutput = useFrameOutput({
-        pixelFormat: 'rgb',
+        pixelFormat: 'yuv',
         dropFramesWhileBusy: true,
         onFrame: (frame) => {
             'worklet';
@@ -308,7 +308,7 @@ export default function FaceDetectionScreen(): ReactNode {
                     if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0) {
                         const result = crop(frame, {
                             cropRegion: CropRegion,
-                            includeImageBase64: true,
+                            includeImageBase64: false,
                         });
 
                         
