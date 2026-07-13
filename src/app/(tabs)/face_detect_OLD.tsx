@@ -170,7 +170,7 @@ export default function FaceDetectionScreen(): ReactNode {
     }
 
     const cropRegionShared = useSharedValue<CropValue>({ left: 200, top: 200, width: 128, height: 64 })
-    const cropRegionUnchanging = { left: 200, top: 200, width: 128, height: 64 }
+    const cropRegionUnchanging = { left: 100, top: 100, x: 100, y: 100, width: 128, height: 64 }
     // State Helper Functions
 
     // Pushes a cropped mouth frame into the buffer; transitions to inferencing once 75 frames are collected
@@ -238,6 +238,11 @@ export default function FaceDetectionScreen(): ReactNode {
         onFrame: (frame) => {
             'worklet';
             const faceValue = FaceDetector.detectFaces(frame)
+
+            if (frame.width < 500 && frame.height < 500){
+                console.log("Frame not larger than 500x500 yet...")
+                return []
+            }
             if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0) {
                 const result = crop(frame, {
                     cropRegion: cropRegionUnchanging,
@@ -254,6 +259,7 @@ export default function FaceDetectionScreen(): ReactNode {
                 faces.value = faceValue
                 frameWidth.value = frame.width;
                 frameHeight.value = frame.height;
+                console.log("Frame Width: ", frame.width, "Frame Height: ", frame.height)
                 const CropRegion = ({ left: 200, top: 200, width: 128, height: 64 })
 
                 const contours = faces.value[0]?.contours
