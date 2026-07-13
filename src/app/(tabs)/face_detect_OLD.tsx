@@ -6,14 +6,15 @@ import React, {
     useRef,
     useState,
     forwardRef,
-    useImperativeHandle
+    useImperativeHandle,
 } from 'react'
 import {
     StyleSheet,
     Text,
     Button,
     View,
-    useWindowDimensions
+    useWindowDimensions,
+    Image
 } from 'react-native'
 import {
     CameraPosition,
@@ -41,7 +42,7 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated'
 import { Canvas, Points, vec } from '@shopify/react-native-skia'
-import { crop, CropResult } from 'vision-camera-cropper'
+import { crop, CropResult, rotateImage } from 'vision-camera-cropper'
 import { scheduleOnRN } from 'react-native-worklets'
 
 
@@ -170,7 +171,7 @@ export default function FaceDetectionScreen(): ReactNode {
     }
 
     const cropRegionShared = useSharedValue<CropValue>({ left: 200, top: 200, width: 128, height: 64 })
-    const cropRegionUnchanging = { left: 100, top: 100, x: 100, y: 100, width: 128, height: 64 }
+    const cropRegionUnchanging = { left: 10, top: 10, width: 10, height: 10 }
     // State Helper Functions
 
     // Pushes a cropped mouth frame into the buffer; transitions to inferencing once 75 frames are collected
@@ -245,32 +246,25 @@ export default function FaceDetectionScreen(): ReactNode {
             'worklet';
             const faceValue = FaceDetector.detectFaces(frame)
 
-            if (frame.width < 500 && frame.height < 500){
+            if (frame.width < 500 && frame.height < 500) {
                 console.log("Frame not larger than 500x500 yet...")
                 return []
             }
-            if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0) {
-                const result = crop(frame, {
-                    cropRegion: cropRegionUnchanging,
-                    includeImageBase64: false,
-                });
+
+            const frameWScale = 7.2
+            const frameHScale = 12.8
 
 
-                scheduleOnRN(setDebugPreview, result)
-                scheduleOnRN(saveFrameBuffer, result)
-                scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
 
-            }
             try {
                 faces.value = faceValue
                 frameWidth.value = frame.width;
                 frameHeight.value = frame.height;
-                console.log("Frame Width: ", frame.width, "Frame Height: ", frame.height)
+
                 const CropRegion = ({ left: 200, top: 200, width: 128, height: 64 })
 
                 const contours = faces.value[0]?.contours
                 if (!contours) {
-                    console.log("No Contours!")
                     return []
                 }
 
@@ -317,7 +311,26 @@ export default function FaceDetectionScreen(): ReactNode {
                     CropRegion.left = mouthX.value
                     CropRegion.top = mouthY.value
 
+                    if (isCapturing.value === true /*&& mouthW.value > 0 && mouthH.value > 0*/) {
+                        const unfliped = crop(frame, {
+                            cropRegion: {
+                                top: mouthY.value / frameHScale, // height?
+                                left: mouthX.value / frameWScale, // width?
+                                width: 25,
+                                height: 10
+                            },
+                            includeImageBase64: true,
+                        });
 
+
+                        const result = rotateImage(unfliped.base64, 180)
+
+                        scheduleOnRN(setDebugPreview, result)
+                        //scheduleOnRN(saveFrameBuffer, result)
+                        console.log("Result value: ", result, "MouthX: ", mouthX.value, "MouthY: ", mouthY.value)
+                        scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
+
+                    }
                 }
 
                 // ENDING FINAL VALUES TO CROP
@@ -637,6 +650,26 @@ export default function FaceDetectionScreen(): ReactNode {
 
                                     />
                                 </Canvas>
+
+                                {debugImgbase64 && (
+                                    <View style={{
+                                        position: 'absolute',
+                                        top: 50,
+                                        left: 20,
+                                        zIndex: 999,
+                                        borderWidth: 2,
+                                        borderColor: 'lime',
+                                        backgroundColor: 'red' // <-- CHANGED TO RED
+                                    }}>
+                                        <Text style={{ color: 'lime', fontSize: 10, textAlign: 'center' }}>AI CROP VIEW</Text>
+                                        <Image
+                                            // Ensure there are absolutely NO SPACES in the "data:image..." prefix
+                                            source={{ uri: `data:image/jpeg;base64,${debugImgbase64}` }}
+                                            style={{ width: 128, height: 64 }}
+                                            resizeMode="contain"
+                                        />
+                                    </View>
+                                )}
 
                                 {cameraPaused && (
                                     <Text
