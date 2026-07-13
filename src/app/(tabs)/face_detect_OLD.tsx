@@ -165,12 +165,12 @@ export default function FaceDetectionScreen(): ReactNode {
     const tiltAmount = useSharedValue(0)
     const doneCropping = useSharedValue(false)
 
-    const sayHello = (name) => {
+    const sayHello = (name: any) => {
         console.log(`Hello ${name}, I am running on the JS Thread!`)
     }
 
     const cropRegionShared = useSharedValue<CropValue>({ left: 200, top: 200, width: 128, height: 64 })
-
+    const cropRegionUnchanging = {left: 200, top: 200, width: 128, height: 64}
     // State Helper Functions
 
     // Pushes a cropped mouth frame into the buffer; transitions to inferencing once 75 frames are collected
@@ -301,7 +301,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
                     if (isCapturing.value === true && mouthW.value > 0 && mouthH.value > 0) {
                         const result = crop(frame, {
-                            cropRegion: CropRegion,
+                            cropRegion: cropRegionUnchanging,
                             includeImageBase64: false,
                         });
 
