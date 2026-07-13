@@ -231,6 +231,12 @@ export default function FaceDetectionScreen(): ReactNode {
         }
     };
 
+    const [debugImgbase64, setDebugImgbase64] = useState<string | null>(null);
+
+    const setDebugPreview = (base64: any) => {
+        setDebugImgbase64(base64)
+    }
+
 
     const frameOutput = useFrameOutput({
         pixelFormat: 'yuv',
@@ -250,7 +256,7 @@ export default function FaceDetectionScreen(): ReactNode {
                 });
 
 
-
+                scheduleOnRN(setDebugPreview, result)
                 scheduleOnRN(saveFrameBuffer, result)
                 scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
 
