@@ -44,6 +44,9 @@ import Animated, {
 import { Canvas, Points, vec } from '@shopify/react-native-skia'
 import { crop, CropResult, rotateImage } from 'vision-camera-cropper'
 import { scheduleOnRN } from 'react-native-worklets'
+import { createPyTorchLipNetTensor } from '../../../assets/TensorHelper'
+import * as ort from 'onnxruntime-react-native';
+import { Asset } from 'expo-asset'
 
 
 // State Machine Definition
@@ -75,19 +78,19 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
     )
 })
 
-const CropPreview = forwardRef ((props, ref) => {
+const CropPreview = forwardRef((props, ref) => {
     const [imageBase64, setImageBase64] = useState<string | null>(null)
 
     useImperativeHandle(ref, () => ({
-        updateImage: (newBase64: string) =>{
+        updateImage: (newBase64: string) => {
             setImageBase64(newBase64)
         }
     }))
     if (!imageBase64) return null
 
     return (
-        <View style = {{
-            position:'absolute',
+        <View style={{
+            position: 'absolute',
             top: 50,
             left: 20,
             zIndex: 999,
@@ -95,16 +98,18 @@ const CropPreview = forwardRef ((props, ref) => {
             borderColor: "lime",
             backgroundColor: 'black'
         }}>
-            <Text style = {{color: 'lime', fontSize:10, textAlign: 'center'}}>AI CROP</Text>
+            <Text style={{ color: 'lime', fontSize: 10, textAlign: 'center' }}>AI CROP</Text>
             <Image
-                source = {{uri: `data:image/jpeg;base64,${imageBase64}`}}
-                style = {{ width: 128, height: 64}}
+                source={{ uri: `data:image/jpeg;base64,${imageBase64}` }}
+                style={{ width: 128, height: 64 }}
                 resizeMode='contain'
             />
-                
+
         </View>
     )
 })
+
+
 
 
 // Main Export Function Loop
@@ -119,6 +124,9 @@ export default function FaceDetectionScreen(): ReactNode {
         width,
         height
     } = useWindowDimensions()
+
+    const windowWidth = useSharedValue(width)
+    const windowHeight = useSharedValue(height)
 
     const frameWidth = useSharedValue(500)
     const frameHeight = useSharedValue(1000)
@@ -201,10 +209,12 @@ export default function FaceDetectionScreen(): ReactNode {
         console.log(`Hello ${name}, I am running on the JS Thread!`)
     }
 
+
+
     // State Helper Functions
 
     // Pushes a cropped mouth frame into the buffer; transitions to inferencing once 75 frames are collected
-    const saveFrameBuffer = (base64MouthData: CropResult) => {
+    const saveFrameBuffer = (base64MouthData: string) => {
         console.log("saveFrameBuffer is being called")
         const framelength = frameBuffer.current.push(base64MouthData)
         console.log("Length of frameBuffer: ", framelength)
@@ -213,6 +223,7 @@ export default function FaceDetectionScreen(): ReactNode {
         if (frameBuffer.current.length === 75) { // end recording phase
             console.log("75 Frames Captured")
             isCapturing.value = false
+            processFramesAndRunAI()
             setAppState('inferencing')
         }
     }
@@ -246,6 +257,8 @@ export default function FaceDetectionScreen(): ReactNode {
         handleDoneState()
     }
 
+    const processFinished = useSharedValue(false)
+
     const lipPoints = useSharedValue<{ x: number; y: number }[]>([])
 
     // Buttons
@@ -254,7 +267,7 @@ export default function FaceDetectionScreen(): ReactNode {
         switch (appState) {
             case 'idle': return { text: 'Start Capture', onPress: handleStartCapture };
             case 'capturing': return { text: 'Stop Capture', onPress: handleStopCapture };
-            case 'inferencing': return { text: 'Analyzing Lips...', onPress: handleRestart };
+            case 'inferencing': return { text: 'Analyzing Lips...', };
             case 'speaking': return { text: 'Speaking...', onPress: handleRestart };
             case 'done': return { text: 'Start Again', onPress: handleStartCapture };
             default: return { text: 'Unknown', onPress: () => { } };
@@ -265,12 +278,54 @@ export default function FaceDetectionScreen(): ReactNode {
     const previewRef = useRef(null);
 
     const setDebugPreview = (base64: any) => {
-        if (previewRef.current){
+        if (previewRef.current) {
             previewRef.current.updateImage(base64)
         }
     }
 
-    const base64shared = useSharedValue("")
+    async function processFramesAndRunAI() {
+        try {
+            console.log("Starting PyTorch Tensor generation...");
+
+            // 1. Run the JS loop
+            const flatTensorData = await createPyTorchLipNetTensor(frameBuffer);
+
+            console.log("Tensor ready! Loading ONNX Model...");
+
+            // 2. Load the Model
+            const [modelAsset, weightsAsset] = await Promise.all([
+                Asset.fromModule(require('../../../assets/lipnet.onnx')).downloadAsync(),
+                Asset.fromModule(require('../../../assets/lipnet.onnx.data')).downloadAsync() // MUST be in the same assets folder
+            ]);
+            
+            let modelPath = modelAsset.localUri || modelAsset.uri;
+
+            if (modelPath.startsWith('file://')) {
+                modelPath = modelPath.replace('file://', '');
+            }
+
+            console.log("Physical Model Path:", modelPath);
+
+            // 3. Pass the physical string path to ONNX
+            const session = await ort.InferenceSession.create(modelPath);
+
+            // 3. Define the PyTorch Shape: [Batch, Channels, Frames, Height, Width]
+            const tensorShape = [1, 3, 75, 64, 128];
+
+            // 4. Create the ONNX Tensor
+            const inputTensor = new ort.Tensor('float32', flatTensorData, tensorShape);
+
+            // 5. Run the model! 
+            // IMPORTANT: 'input' is the default generic name, but you might need to check 
+            // your specific model's input name if it throws a "key not found" error.
+            const results = await session.run({ input: inputTensor });
+
+            console.log("AI Prediction Complete:", results);
+            processFinished.value = true
+        } catch (error) {
+            console.error("AI Pipeline failed:", error);
+        }
+    }
 
     const frameOutput = useFrameOutput({
         pixelFormat: 'yuv',
@@ -317,9 +372,13 @@ export default function FaceDetectionScreen(): ReactNode {
                         ...LOWER_LIP_BOTTOM
                     ]
 
+                    const scale = Math.max(windowWidth.value / frameWidth.value, windowHeight.value / frameHeight.value)
+                    const offsetX = (720 * scale - windowWidth.value) / 2
+                    const offsetY = (1280 * scale - windowHeight.value) / 2
+
                     lipPoints.value = allLipPoints.map(point => ({
-                        x: (point.x),
-                        y: (point.y - CorrectionY)
+                        x: (point.x * scale) - offsetX,
+                        y: (point.y * scale) - offsetY
                     }))
 
                     // LIP TILT CALCULATION
@@ -339,6 +398,8 @@ export default function FaceDetectionScreen(): ReactNode {
 
                     const LipNetWidth = 128
                     const LipNetHeight = 64
+
+
 
                     mouthW.value = LipNetHeight
                     mouthH.value = LipNetWidth
@@ -360,7 +421,7 @@ export default function FaceDetectionScreen(): ReactNode {
                         const result = rotateImage(unfliped.base64, 180)
                         //base64shared.value = result
                         scheduleOnRN(setDebugPreview, result)
-                        //scheduleOnRN(saveFrameBuffer, result)
+                        scheduleOnRN(saveFrameBuffer, result)
                         console.log("Result value: ", result, "MouthX: ", mouthX.value, "MouthY: ", mouthY.value)
                         console.log("Crop X: ", CropRegion.left, "Crop Y: ", CropRegion.top)
                         scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
@@ -686,7 +747,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                     />
                                 </Canvas>
 
-                                <CropPreview ref={previewRef}/>
+                                <CropPreview ref={previewRef} />
 
                                 {cameraPaused && (
                                     <Text

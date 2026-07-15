@@ -11,5 +11,6 @@ config.transformer.getTransformOptions = async () => ({
     },
 })
 
+config.resolver.assetExts.push('onnx', 'bin', 'data');
 
 module.exports = config;
