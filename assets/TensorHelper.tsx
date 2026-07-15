@@ -4,6 +4,7 @@ import * as jpeg from 'jpeg-js';
 export async function createPyTorchLipNetTensor(base64Frames, targetW = 128, targetH = 64) {
   const framesCount = base64Frames.length; // 75
   const channels = 3; // Red, Green, Blue
+  console.log("SANITY CHECK - Frames received:", base64Frames.length);
   
   // PyTorch Conv3D Shape: [Batch(1), Channels(3), Frames(75), Height(64), Width(128)]
   const tensorData = new Float32Array(1 * channels * framesCount * targetH * targetW);

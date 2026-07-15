@@ -78,6 +78,47 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
     )
 })
 
+function decodeCTC(cpuData) {
+    // Standard LipNet Vocabulary: 26 letters + space. (27 items: Index 0 to 26)
+    const vocab = "abcdefghijklmnopqrstuvwxyz ".split("");
+
+    // In most PyTorch LipNet exports, the CTC Blank Token is placed at the very end (Index 27)
+    // Note: If your output looks like pure gibberish, your specific model might use Index 0 as the blank!
+    const blankToken = 27;
+
+    let prevClassIdx = -1;
+    let finalString = "";
+
+    // Loop through all 75 frames
+    for (let t = 0; t < 75; t++) {
+        // Extract the 28 probabilities for this specific frame
+        const frameStart = t * 28;
+        const frameLogits = cpuData.slice(frameStart, frameStart + 28);
+
+        // Find the index of the highest probability (argmax)
+        let maxProb = -Infinity;
+        let maxIdx = -1;
+        for (let i = 0; i < 28; i++) {
+            if (frameLogits[i] > maxProb) {
+                maxProb = frameLogits[i];
+                maxIdx = i;
+            }
+        }
+
+        // CTC Rules: 
+        // 1. Ignore the blank tokens
+        // 2. Ignore consecutive duplicate letters (e.g., "H-H-H-E-E-L-L-L-O" becomes "HELLO")
+        if (maxIdx !== blankToken && maxIdx !== prevClassIdx) {
+            finalString += vocab[maxIdx];
+        }
+
+        // Update previous class to check for duplicates on the next loop
+        prevClassIdx = maxIdx;
+    }
+
+    return finalString.trim();
+}
+
 const CropPreview = forwardRef((props, ref) => {
     const [imageBase64, setImageBase64] = useState<string | null>(null)
 
@@ -252,6 +293,12 @@ export default function FaceDetectionScreen(): ReactNode {
         isCapturing.value = false
     }
 
+    const handleSpeakingState = () => {
+        processFinished.value = false
+        setAppState('done')
+        handleDoneState()
+    }
+
     const handleRestart = () => {
         setAppState('done')
         handleDoneState()
@@ -288,26 +335,20 @@ export default function FaceDetectionScreen(): ReactNode {
             console.log("Starting PyTorch Tensor generation...");
 
             // 1. Run the JS loop
-            const flatTensorData = await createPyTorchLipNetTensor(frameBuffer);
+            const flatTensorData = await createPyTorchLipNetTensor(frameBuffer.current);
 
             console.log("Tensor ready! Loading ONNX Model...");
 
             // 2. Load the Model
-            const [modelAsset, weightsAsset] = await Promise.all([
-                Asset.fromModule(require('../../../assets/lipnet.onnx')).downloadAsync(),
-                Asset.fromModule(require('../../../assets/lipnet.onnx.data')).downloadAsync() // MUST be in the same assets folder
-            ]);
-            
-            let modelPath = modelAsset.localUri || modelAsset.uri;
+            const modelAsset = Asset.fromModule(require('../../../assets/lipnet_single.onnx'));
+            await modelAsset.downloadAsync();
 
-            if (modelPath.startsWith('file://')) {
-                modelPath = modelPath.replace('file://', '');
-            }
-
-            console.log("Physical Model Path:", modelPath);
+            // Because it's a single file without hardcoded external links, 
+            // ONNX can usually read Expo's hashed localUri directly!
+            const cleanPath = modelAsset.localUri.replace('file://', '');
+            const session = await ort.InferenceSession.create(cleanPath);
 
             // 3. Pass the physical string path to ONNX
-            const session = await ort.InferenceSession.create(modelPath);
 
             // 3. Define the PyTorch Shape: [Batch, Channels, Frames, Height, Width]
             const tensorShape = [1, 3, 75, 64, 128];
@@ -318,10 +359,26 @@ export default function FaceDetectionScreen(): ReactNode {
             // 5. Run the model! 
             // IMPORTANT: 'input' is the default generic name, but you might need to check 
             // your specific model's input name if it throws a "key not found" error.
+            // 5. Run the model!
             const results = await session.run({ input: inputTensor });
 
-            console.log("AI Prediction Complete:", results);
+            // Extract the flat Float32Array from the output node
+            // (Check your log: the key is "output", so we access results.output.cpuData)
+            const rawOutputArray = results.output.cpuData;
+
+            // 6. Decode the matrix into English!
+            const translation = decodeCTC(rawOutputArray);
+
+            console.log("====================================");
+            console.log("LIPNET TRANSLATION: ", translation.toUpperCase());
+            console.log("====================================");
+
+            processFinished.value = true;
+
+            //console.log("AI Prediction Complete:", results);
             processFinished.value = true
+            handleSpeakingState()
+
         } catch (error) {
             console.error("AI Pipeline failed:", error);
         }
@@ -422,7 +479,7 @@ export default function FaceDetectionScreen(): ReactNode {
                         //base64shared.value = result
                         scheduleOnRN(setDebugPreview, result)
                         scheduleOnRN(saveFrameBuffer, result)
-                        console.log("Result value: ", result, "MouthX: ", mouthX.value, "MouthY: ", mouthY.value)
+                        //console.log("Result value: ", result, "MouthX: ", mouthX.value, "MouthY: ", mouthY.value)
                         console.log("Crop X: ", CropRegion.left, "Crop Y: ", CropRegion.top)
                         scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
 
