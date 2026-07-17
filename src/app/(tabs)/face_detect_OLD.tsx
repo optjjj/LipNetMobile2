@@ -433,6 +433,8 @@ export default function FaceDetectionScreen(): ReactNode {
                     const offsetX = (720 * scale - windowWidth.value) / 2
                     const offsetY = (1280 * scale - windowHeight.value) / 2
 
+                    console.log("Offset X: ", offsetX, "Offset Y: ", offsetY)
+
                     lipPoints.value = allLipPoints.map(point => ({
                         x: (point.x * scale) - offsetX,
                         y: (point.y * scale) - offsetY
