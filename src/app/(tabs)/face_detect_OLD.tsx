@@ -490,7 +490,6 @@ export default function FaceDetectionScreen(): ReactNode {
                         scheduleOnRN(saveFrameBuffer, result)
                         //console.log("Result value: ", result, "MouthX: ", mouthX.value, "MouthY: ", mouthY.value)
                         console.log("Crop X: ", CropRegion.left, "Crop Y: ", CropRegion.top)
-                        scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
 
                     }
                 }
