@@ -434,17 +434,16 @@ export default function FaceDetectionScreen(): ReactNode {
                     ]
 
                     // Using frameWidth as Height and frameHeight as width due to being in portrait mode
-                    const scale = Math.max(windowWidth.value / frameHeight.value, windowHeight.value / frameWidth.value)
-                    const scaleX = Math.max (windowWidth.value / frameHeight.value)
-                    const scaleY = Math.max(windowHeight.value / frameWidth.value)
-                    const offsetX = (frameHeight.value * scaleY - windowWidth.value) / 2
-                    const offsetY = (frameWidth.value * scaleY - windowHeight.value) / 2
+
+                    const scale = Math.max(windowHeight.value / cameraDimensions.width)
+                    const offsetX = (cameraDimensions.height * scale - windowWidth.value) / 2
+                    const offsetY = (cameraDimensions.width * scale - windowHeight.value) / 2
                     console.log("Camera Dimensions: ", cameraDimensions)
 
                     console.log("Window Height: ", windowHeight.value, "Window Width: ", windowWidth.value, "Frame Height: ", frameHeight.value, "Frame Width: ", frameWidth.value)
                     lipPoints.value = allLipPoints.map(point => ({
-                        x: (point.x * scale) + 50,
-                        y: (point.y * scale) + 90
+                        x: (point.x * scale) + offsetX,
+                        y: (point.y * scale) + offsetY
                     }))
 
                     // LIP TILT CALCULATION
