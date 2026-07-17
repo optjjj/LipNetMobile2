@@ -435,9 +435,9 @@ export default function FaceDetectionScreen(): ReactNode {
 
                     // Using frameWidth as Height and frameHeight as width due to being in portrait mode
 
-                    const scale = Math.max(windowHeight.value / cameraDimensions.width)
-                    const offsetX = (cameraDimensions.height * scale - windowWidth.value) / 2
-                    const offsetY = (cameraDimensions.width * scale - windowHeight.value) / 2
+                    const scale = Math.max(cameraDimensions.height / frameWidth.value)
+                    const offsetX = (frameHeight.value * scale - cameraDimensions.width) / 2
+                    const offsetY = (frameWidth.value * scale - cameraDimensions.height) / 2
                     console.log("Camera Dimensions: ", cameraDimensions)
 
                     console.log("Window Height: ", windowHeight.value, "Window Width: ", windowWidth.value, "Frame Height: ", frameHeight.value, "Frame Width: ", frameWidth.value)
