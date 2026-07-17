@@ -166,7 +166,7 @@ export default function FaceDetectionScreen(): ReactNode {
         height
     } = useWindowDimensions()
 
-    const [cameraDimensions, setCameraDimensions] = useState({width: 448, height: 997})
+    const [cameraDimensions, setCameraDimensions] = useState({ width: 448, height: 997 })
 
     const windowWidth = useSharedValue(width)
     const windowHeight = useSharedValue(height)
@@ -246,23 +246,17 @@ export default function FaceDetectionScreen(): ReactNode {
     const mouthX = useSharedValue(0)
     const mouthY = useSharedValue(0)
     const tiltAmount = useSharedValue(0)
-    const doneCropping = useSharedValue(false)
-
-    const sayHello = (name: any) => {
-        console.log(`Hello ${name}, I am running on the JS Thread!`)
-    }
-
-
 
     // State Helper Functions
 
     // Pushes a cropped mouth frame into the buffer; transitions to inferencing once 75 frames are collected
     const saveFrameBuffer = (base64MouthData: string) => {
         console.log("saveFrameBuffer is being called")
-        const framelength = frameBuffer.current.push(base64MouthData)
-        console.log("Length of frameBuffer: ", framelength)
-        progressRef.current?.updateCount(frameBuffer.current.length)
-
+        if (frameBuffer.current.length < 75) {
+            const framelength = frameBuffer.current.push(base64MouthData)
+            console.log("Length of frameBuffer: ", framelength)
+            progressRef.current?.updateCount(frameBuffer.current.length)
+        }
         if (frameBuffer.current.length === 75) { // end recording phase
             console.log("75 Frames Captured")
             isCapturing.value = false
@@ -402,7 +396,8 @@ export default function FaceDetectionScreen(): ReactNode {
 
             const frameWScale = 4
             const frameHScale = 9
-            const CorrectionY = 40
+            const LipNetWidth = 128
+            const LipNetHeight = 64
 
 
 
@@ -458,11 +453,8 @@ export default function FaceDetectionScreen(): ReactNode {
                     const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
                     const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
 
-                    const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scale - offsetX )
-                    const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale - offsetY )
-
-                    const LipNetWidth = 128
-                    const LipNetHeight = 64
+                    const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scale - offsetX)
+                    const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale - offsetY)
 
 
 
@@ -774,8 +766,8 @@ export default function FaceDetectionScreen(): ReactNode {
                                     ]}
 
                                     onLayout={(event) => {
-                                        const {width, height} = event.nativeEvent.layout
-                                        setCameraDimensions({width, height})
+                                        const { width, height } = event.nativeEvent.layout
+                                        setCameraDimensions({ width, height })
                                     }}
                                     device={cameraDevice}
 
