@@ -166,6 +166,8 @@ export default function FaceDetectionScreen(): ReactNode {
         height
     } = useWindowDimensions()
 
+    const [cameraDimensions, setCameraDimensions] = useState({width: 448, height: 997})
+
     const windowWidth = useSharedValue(width)
     const windowHeight = useSharedValue(height)
 
@@ -396,6 +398,8 @@ export default function FaceDetectionScreen(): ReactNode {
                 return []
             }
 
+            // Frame W Scale and Frame H Scale have to be percent representations of the X and Y axis
+
             const frameWScale = 4
             const frameHScale = 9
             const CorrectionY = 40
@@ -435,11 +439,12 @@ export default function FaceDetectionScreen(): ReactNode {
                     const scaleY = Math.max(windowHeight.value / frameWidth.value)
                     const offsetX = (frameHeight.value * scaleY - windowWidth.value) / 2
                     const offsetY = (frameWidth.value * scaleY - windowHeight.value) / 2
+                    console.log("Camera Dimensions: ", cameraDimensions)
 
                     console.log("Window Height: ", windowHeight.value, "Window Width: ", windowWidth.value, "Frame Height: ", frameHeight.value, "Frame Width: ", frameWidth.value)
                     lipPoints.value = allLipPoints.map(point => ({
                         x: (point.x * scale) + 50,
-                        y: (point.y * scale) + 120
+                        y: (point.y * scale) + 90
                     }))
 
                     // LIP TILT CALCULATION
@@ -454,8 +459,8 @@ export default function FaceDetectionScreen(): ReactNode {
                     const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
                     const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
 
-                    const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2)//* scale - offsetX )
-                    const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2)//* scale - offsetY )
+                    const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scaleY - offsetX )
+                    const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scaleY - offsetY )
 
                     const LipNetWidth = 128
                     const LipNetHeight = 64
@@ -465,7 +470,7 @@ export default function FaceDetectionScreen(): ReactNode {
                     mouthW.value = LipNetHeight
                     mouthH.value = LipNetWidth
                     mouthX.value = (LipCenterX - (LipNetWidth / 2))
-                    mouthY.value = LipCenterY - (LipNetHeight / 2) - CorrectionY
+                    mouthY.value = LipCenterY - (LipNetHeight / 2)
 
                     CropRegion.left = (mouthX.value) / frameWScale
                     CropRegion.top = (880 - mouthY.value) / frameHScale
@@ -769,7 +774,10 @@ export default function FaceDetectionScreen(): ReactNode {
                                         { fps: 25 }
                                     ]}
 
-
+                                    onLayout={(event) => {
+                                        const {width, height} = event.nativeEvent.layout
+                                        setCameraDimensions({width, height})
+                                    }}
                                     device={cameraDevice}
 
                                     orientationSource={'device'}
@@ -796,7 +804,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                 <Animated.View style={lipBoxStyle} />
 
                                 {/* Skia canvas for lip contour point visualization */}
-                                <Canvas style={StyleSheet.absoluteFill} pointerEvents='none'>
+                                {/* <Canvas style={StyleSheet.absoluteFill} pointerEvents='none'>
                                     <Points
                                         points={lipPoints}
                                         mode='points'
@@ -806,7 +814,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                         zIndex={100}
 
                                     />
-                                </Canvas>
+                                </Canvas> */}
 
                                 <CropPreview ref={previewRef} />
 
