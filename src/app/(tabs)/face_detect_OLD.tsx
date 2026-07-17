@@ -252,11 +252,9 @@ export default function FaceDetectionScreen(): ReactNode {
     // Pushes a cropped mouth frame into the buffer; transitions to inferencing once 75 frames are collected
     const saveFrameBuffer = (base64MouthData: string) => {
         console.log("saveFrameBuffer is being called")
-        if (frameBuffer.current.length < 75) {
             const framelength = frameBuffer.current.push(base64MouthData)
             console.log("Length of frameBuffer: ", framelength)
             progressRef.current?.updateCount(frameBuffer.current.length)
-        }
         if (frameBuffer.current.length === 75) { // end recording phase
             console.log("75 Frames Captured")
             isCapturing.value = false
@@ -468,11 +466,11 @@ export default function FaceDetectionScreen(): ReactNode {
                     const clamp = (v:number, lo:number, hi:number) => Math.min(hi, Math.max(lo, v))
 
                     const left = clamp(((mouthXCrop) / cameraDimensions.width) * 100, 0, 100)
-                    const top = clamp(((cameraDimensions.height - mouthY.value) / cameraDimensions.height) * 100, 0, 100)
+                    const top = clamp(((cameraDimensions.height - mouthY.value - 60) / cameraDimensions.height) * 100, 0, 100)
 
                     // CropRegion.left = mouthXCrop / frameWScale
                     // CropRegion.top = (880 - mouthY.value) / frameHScale
-                    CropRegion.left = left
+                    CropRegion.left = ((cameraDimensions.width - mouthXCrop - offsetX - 70) / cameraDimensions.width * 100)
                     CropRegion.top = top
                     CropRegion.width = 17.7
                     CropRegion.height = 5
@@ -484,13 +482,12 @@ export default function FaceDetectionScreen(): ReactNode {
                         });
 
 
-                        const result = rotateImage(unfliped.base64, 180)
+                        const result = rotateImage(unfliped.base64, 180 + tiltAmount.value)
                         //base64shared.value = result
                         scheduleOnRN(setDebugPreview, result)
                         scheduleOnRN(saveFrameBuffer, result)
                         //console.log("Result value: ", result, "MouthX: ", mouthX.value, "MouthY: ", mouthY.value)
                         console.log("Crop X: ", CropRegion.left, "Crop Y: ", CropRegion.top)
-                        scheduleOnRN(sayHello, "CROP HAS SUCCESSFULLY RUN")
 
                     }
                 }
