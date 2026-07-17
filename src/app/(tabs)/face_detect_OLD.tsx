@@ -451,7 +451,7 @@ export default function FaceDetectionScreen(): ReactNode {
                     const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
                     const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
 
-                    tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
+                    tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * -0.75
 
                     // LIP BOX CALCULATION
 
@@ -468,7 +468,7 @@ export default function FaceDetectionScreen(): ReactNode {
 
                     mouthW.value = LipNetHeight
                     mouthH.value = LipNetWidth
-                    mouthX.value = (LipCenterX - (LipNetWidth / 2))
+                    mouthX.value = cameraDimensions.width - (LipCenterX - (LipNetWidth / 2))
                     mouthY.value = LipCenterY - (LipNetHeight / 2)
 
                     CropRegion.left = (mouthX.value) / frameWScale
