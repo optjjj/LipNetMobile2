@@ -438,9 +438,9 @@ export default function FaceDetectionScreen(): ReactNode {
                     const scale = Math.max(cameraDimensions.height / frameWidth.value)
                     const offsetX = (frameHeight.value * scale - cameraDimensions.width) / 2
                     const offsetY = (frameWidth.value * scale - cameraDimensions.height) / 2
-                    console.log("Camera Dimensions: ", cameraDimensions)
+                    //console.log("Camera Dimensions: ", cameraDimensions)
 
-                    console.log("Window Height: ", windowHeight.value, "Window Width: ", windowWidth.value, "Frame Height: ", frameHeight.value, "Frame Width: ", frameWidth.value)
+                    //console.log("Window Height: ", windowHeight.value, "Window Width: ", windowWidth.value, "Frame Height: ", frameHeight.value, "Frame Width: ", frameWidth.value)
                     lipPoints.value = allLipPoints.map(point => ({
                         x: (point.x * scale) + offsetX,
                         y: (point.y * scale) + offsetY
@@ -451,7 +451,7 @@ export default function FaceDetectionScreen(): ReactNode {
                     const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
                     const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
 
-                    tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * -0.75
+                    tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * -1
 
                     // LIP BOX CALCULATION
 
@@ -468,11 +468,20 @@ export default function FaceDetectionScreen(): ReactNode {
 
                     mouthW.value = LipNetHeight
                     mouthH.value = LipNetWidth
-                    mouthX.value = cameraDimensions.width - (LipCenterX - (LipNetWidth / 2))
+                    mouthX.value = cameraDimensions.width - (LipCenterX - (LipNetWidth / 2) + LipNetWidth)
                     mouthY.value = LipCenterY - (LipNetHeight / 2)
 
-                    CropRegion.left = (mouthX.value) / frameWScale
-                    CropRegion.top = (880 - mouthY.value) / frameHScale
+                    const mouthXCrop = LipCenterX - (LipNetWidth / 2)
+
+                    const clamp = (v:number, lo:number, hi:number) => Math.min(hi, Math.max(lo, v))
+
+                    const left = clamp(((mouthXCrop) / cameraDimensions.width) * 100, 0, 100)
+                    const top = clamp(((cameraDimensions.height - mouthY.value) / cameraDimensions.height) * 100, 0, 100)
+
+                    // CropRegion.left = mouthXCrop / frameWScale
+                    // CropRegion.top = (880 - mouthY.value) / frameHScale
+                    CropRegion.left = left
+                    CropRegion.top = top
                     CropRegion.width = 17.7
                     CropRegion.height = 5
 
