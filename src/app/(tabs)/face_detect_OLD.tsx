@@ -776,6 +776,8 @@ export default function FaceDetectionScreen(): ReactNode {
                                         setCameraDimensions({ width, height })
                                     }}
                                     device={cameraDevice}
+                                    
+                                    exposure={3.0}
 
                                     orientationSource={'device'}
                                     onError={handleCameraMountError}
