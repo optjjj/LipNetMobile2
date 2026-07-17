@@ -459,8 +459,8 @@ export default function FaceDetectionScreen(): ReactNode {
                     const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
                     const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
 
-                    const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scaleY - offsetX )
-                    const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scaleY - offsetY )
+                    const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2 * scale - offsetX )
+                    const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2 * scale - offsetY )
 
                     const LipNetWidth = 128
                     const LipNetHeight = 64
