@@ -80,7 +80,13 @@ const FrameProgressBar = forwardRef<ProgressBarRef, {}>((props, ref) => {
 
 function decodeCTC(cpuData) {
     // Standard LipNet Vocabulary: 26 letters + space. (27 items: Index 0 to 26)
-    const vocab = "abcdefghijklmnopqrstuvwxyz ".split("");
+    const vocab = {
+        0: '', // CTC Blank
+        1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 6: 'f', 7: 'g', 8: 'h', 9: 'i',
+        10: 'j', 11: 'k', 12: 'l', 13: 'm', 14: 'n', 15: 'o', 16: 'p', 17: 'q',
+        18: 'r', 19: 's', 20: 't', 21: 'u', 22: 'v', 23: 'w', 24: 'x', 25: 'y', 26: 'z',
+        27: ' ' // Real space character
+    };
 
     // In most PyTorch LipNet exports, the CTC Blank Token is placed at the very end (Index 27)
     // Note: If your output looks like pure gibberish, your specific model might use Index 0 as the blank!
@@ -109,7 +115,7 @@ function decodeCTC(cpuData) {
         // 1. Ignore the blank tokens
         // 2. Ignore consecutive duplicate letters (e.g., "H-H-H-E-E-L-L-L-O" becomes "HELLO")
         if (maxIdx !== blankToken && maxIdx !== prevClassIdx) {
-            finalString += vocab[maxIdx];
+            finalString += (vocab as any)[maxIdx];
         }
 
         // Update previous class to check for duplicates on the next loop
