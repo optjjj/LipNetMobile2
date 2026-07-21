@@ -1,49 +1,56 @@
 import { Buffer } from 'buffer';
 import * as jpeg from 'jpeg-js';
 
-export async function createPyTorchLipNetTensor(base64Frames, targetW = 128, targetH = 64) {
-  const framesCount = base64Frames.length; // 75
-  const channels = 3; // Red, Green, Blue
-  console.log("SANITY CHECK - Frames received:", base64Frames.length);
-  
-  // PyTorch Conv3D Shape: [Batch(1), Channels(3), Frames(75), Height(64), Width(128)]
+// Assael et al. 2016 per-channel normalization constants, applied after /255.
+// If your model was trained with dataset stats computed independently, use those instead.
+const LIPNET_MEAN = [0.7136, 0.4906, 0.3283]; // R, G, B
+const LIPNET_STD  = [0.1138, 0.1078, 0.0917]; // R, G, B
+
+export async function createPyTorchLipNetTensor(
+  base64Frames: string[],
+  targetW = 128, // VERIFY against your ONNX input shape (Netron) before trusting this default
+  targetH = 64
+) {
+  const framesCount = base64Frames.length;
+  const channels = 3;
   const tensorData = new Float32Array(1 * channels * framesCount * targetH * targetW);
 
-  // Pre-calculate memory strides for the flat Float32Array
   const channelStride = framesCount * targetH * targetW;
   const frameStride = targetH * targetW;
   const heightStride = targetW;
 
   for (let f = 0; f < framesCount; f++) {
-    // 1. Clean and decode the Base64 JPEG
     const cleanBase64 = base64Frames[f].replace(/^data:image\/jpeg;base64,/, "");
-    const rawImageData = Buffer.from(cleanBase64, 'base64');
-    const decoded = jpeg.decode(rawImageData, { useTArray: true }); 
-    const origW = decoded.width;
-    const origH = decoded.height;
-    const data = decoded.data;
+    const decoded = jpeg.decode(Buffer.from(cleanBase64, 'base64'), { useTArray: true });
+    const origW = decoded.width, origH = decoded.height, data = decoded.data;
 
-    // 2. Loop through the target grid (128x64)
     for (let y = 0; y < targetH; y++) {
+      // Half-pixel-center bilinear mapping (matches PIL/cv2/torchvision defaults)
+      const srcYf = ((y + 0.5) / targetH) * origH - 0.5;
+      const y0 = Math.max(0, Math.floor(srcYf));
+      const y1 = Math.min(origH - 1, y0 + 1);
+      const wy = srcYf - y0;
+
       for (let x = 0; x < targetW; x++) {
-        // Nearest Neighbor Pixel Mapping
-        const srcX = Math.floor((x / targetW) * origW);
-        const srcY = Math.floor((y / targetH) * origH);
-        const srcIndex = (srcY * origW + srcX) * 4; // RGBA uses 4 bytes per pixel
+        const srcXf = ((x + 0.5) / targetW) * origW - 0.5;
+        const x0 = Math.max(0, Math.floor(srcXf));
+        const x1 = Math.min(origW - 1, x0 + 1);
+        const wx = srcXf - x0;
 
-        // Extract and Normalize (0.0 to 1.0)
-        const r = data[srcIndex] / 255.0;
-        const g = data[srcIndex + 1] / 255.0;
-        const b = data[srcIndex + 2] / 255.0;
+        const i00 = (y0 * origW + x0) * 4;
+        const i01 = (y0 * origW + x1) * 4;
+        const i10 = (y1 * origW + x0) * 4;
+        const i11 = (y1 * origW + x1) * 4;
 
-        // 3. Map to PyTorch's strict Channels-First memory layout
-        const rIndex = (0 * channelStride) + (f * frameStride) + (y * heightStride) + x;
-        const gIndex = (1 * channelStride) + (f * frameStride) + (y * heightStride) + x;
-        const bIndex = (2 * channelStride) + (f * frameStride) + (y * heightStride) + x;
+        for (let c = 0; c < 3; c++) {
+          const top = data[i00 + c] * (1 - wx) + data[i01 + c] * wx;
+          const bot = data[i10 + c] * (1 - wx) + data[i11 + c] * wx;
+          const pixel = (top * (1 - wy) + bot * wy) / 255.0;
+          const normalized = (pixel - LIPNET_MEAN[c]) / LIPNET_STD[c];
 
-        tensorData[rIndex] = r;
-        tensorData[gIndex] = g;
-        tensorData[bIndex] = b;
+          const tIndex = (c * channelStride) + (f * frameStride) + (y * heightStride) + x;
+          tensorData[tIndex] = normalized;
+        }
       }
     }
   }
