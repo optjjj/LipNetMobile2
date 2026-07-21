@@ -427,9 +427,11 @@ export default function FaceDetectionScreen(): ReactNode {
                     // Using frameWidth as Height and frameHeight as width due to being in portrait mode
 
                     const scale = Math.max(cameraDimensions.height / frameWidth.value)
+
                     const offsetX = (frameHeight.value * scale - cameraDimensions.width) / 2
                     const offsetY = (frameWidth.value * scale - cameraDimensions.height) / 2
                     //console.log("Camera Dimensions: ", cameraDimensions)
+                    console.log("Scale: ", scale, "offset X: ", offsetX, "offset Y: ", offsetY)
 
                     //console.log("Window Height: ", windowHeight.value, "Window Width: ", windowWidth.value, "Frame Height: ", frameHeight.value, "Frame Width: ", frameWidth.value)
                     lipPoints.value = allLipPoints.map(point => ({
@@ -460,15 +462,21 @@ export default function FaceDetectionScreen(): ReactNode {
                     mouthY.value = LipCenterY - (LipNetHeight / 2)
 
                     const mouthXCrop = LipCenterX - (LipNetWidth / 2)
+                    const mouthYCrop = LipCenterY - (LipNetHeight / 2)
 
                     const clamp = (v:number, lo:number, hi:number) => Math.min(hi, Math.max(lo, v))
 
-                    const left = clamp(((mouthXCrop) / cameraDimensions.width) * 100, 0, 100)
-                    const top = clamp(((cameraDimensions.height - mouthY.value - 60) / cameraDimensions.height) * 100, 0, 100)
+                    // const thetha = tiltAmount.value * 100
 
-                    // CropRegion.left = mouthXCrop / frameWScale
-                    // CropRegion.top = (880 - mouthY.value) / frameHScale
-                    CropRegion.left = ((cameraDimensions.width - mouthXCrop - offsetX - 70) / cameraDimensions.width * 100)
+                    // const mouthXrotated = LipCenterX + (mouthXCrop - LipCenterX) * Math.cos(thetha) - (mouthYCrop - LipCenterY) * Math.sin(thetha)
+                    // const mouthYrotated = LipCenterY + (mouthXCrop - LipCenterX) * Math.sin(thetha) + (mouthYCrop - LipCenterY) * Math.cos(thetha)
+
+                    // const left = clamp((cameraDimensions.width - mouthXrotated - offsetX - 70) / cameraDimensions.width * 100, 0, 100)
+                    const top = clamp(((cameraDimensions.height - mouthYCrop - 60) / cameraDimensions.height) * 100, 0, 100)
+
+                    const leftRegion =  ((cameraDimensions.width - mouthXCrop - offsetX - 70) / cameraDimensions.width * 100)
+                    
+                    CropRegion.left = leftRegion
                     CropRegion.top = top
                     CropRegion.width = 17.7
                     CropRegion.height = 5
@@ -480,7 +488,7 @@ export default function FaceDetectionScreen(): ReactNode {
                         });
 
                         console.log("Tilt Amount: ", tiltAmount.value)
-                        const result = rotateImage(unfliped.base64, (180 + tiltAmount.value))
+                        const result = rotateImage(unfliped.base64, (180))
                         //base64shared.value = result
                         scheduleOnRN(setDebugPreview, result)
                         scheduleOnRN(saveFrameBuffer, result)
