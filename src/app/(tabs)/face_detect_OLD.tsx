@@ -392,8 +392,6 @@ export default function FaceDetectionScreen(): ReactNode {
 
             // Frame W Scale and Frame H Scale have to be percent representations of the X and Y axis
 
-            const frameWScale = 4
-            const frameHScale = 9
             const LipNetWidth = 128
             const LipNetHeight = 64
 
@@ -481,8 +479,8 @@ export default function FaceDetectionScreen(): ReactNode {
                             includeImageBase64: true,
                         });
 
-
-                        const result = rotateImage(unfliped.base64, 180 + tiltAmount.value)
+                        console.log("Tilt Amount: ", tiltAmount.value)
+                        const result = rotateImage(unfliped.base64, (180 + tiltAmount.value))
                         //base64shared.value = result
                         scheduleOnRN(setDebugPreview, result)
                         scheduleOnRN(saveFrameBuffer, result)
@@ -506,117 +504,6 @@ export default function FaceDetectionScreen(): ReactNode {
         }
     })
 
-
-    // --------------- Animated / Derived Value Logic -------------------------
-
-    // Derives real-time lip contour points from the faces shared value.
-    // Scales coordinates to match screen space, computes the LipNet mouth bounding box,
-    // and applies a tilt correction so the crop tracks head rotation.
-    //     const LipMeshPoints = useDerivedValue(() => {
-    //         // scheduleOnRN((greeting) => console.log(greeting), "Hello from RN Runtime");
-    //         // scheduleOnRN(sayHello, "hello")
-    //         if (faces.value.length === 0) {
-    //             console.log("LipMeshPoints Returned due to faces.value.length being 0")
-    //             return [];
-    //         }
-
-    //         const contours = faces.value[0]?.contours;
-    //         if (!contours) {
-    //             console.log("LipMeshPoints stopped because no contours were detected")
-    //             return []
-    //         }
-
-    //         const {
-    //             UPPER_LIP_TOP,
-    //             UPPER_LIP_BOTTOM,
-    //             LOWER_LIP_TOP,
-    //             LOWER_LIP_BOTTOM
-    //         } = contours as Record<string, { x: number; y: number }[]>;
-
-
-
-    //         // Scale Factors
-    //         // const scaleFactorX = (screen.width / width)
-    //         // const scaleFactorY = (screen.height / height)
-
-    //         const additionalYOffset = 45
-
-    //         const scale = Math.max(width / frameWidth.value, height / frameHeight.value);
-    //         const offsetX = (frameWidth.value * scale - width) / 2;
-    //         const offsetY = (frameHeight.value * scale - height) / 2 + additionalYOffset;
-
-
-    //         // LIP TILT CALCULATION
-
-    //         const leftMostPoint = allLipPoints.reduce((min, p) => p.x < min.x ? p : min, allLipPoints[0])
-    //         const rightMostPoint = allLipPoints.reduce((max, p) => p.x > max.x ? p : max, allLipPoints[0])
-
-    //         tiltAmount.value = Math.atan2(rightMostPoint.y - leftMostPoint.y, rightMostPoint.x - leftMostPoint.x) * 0.75
-
-    //         const topCenterPoint = UPPER_LIP_TOP[Math.floor(UPPER_LIP_TOP.length / 2)]
-    //         const bottomCenterPoint = LOWER_LIP_BOTTOM[Math.floor(LOWER_LIP_BOTTOM.length / 2)]
-
-    //         const LipCenterX = ((topCenterPoint.x + bottomCenterPoint.x) / 2)//* scale - offsetX )
-    //         const LipCenterY = ((topCenterPoint.y + bottomCenterPoint.y) / 2)//* scale - offsetY )
-
-    //         const LipNetWidth = 128
-    //         const LipNetHeight = 64
-
-    //         mouthW.value = LipNetHeight
-    //         mouthH.value = LipNetWidth
-    //         mouthX.value = (LipCenterX - (LipNetWidth / 2))
-    //         mouthY.value = LipCenterY - (LipNetHeight / 2)
-
-    //         cropRegionShared.value = {
-    //             left: (LipCenterX - LipNetWidth / 2) - width,
-    //             top: LipCenterY - offsetY - LipNetHeight / 2,
-    //             width: LipNetHeight,
-    //             height: LipNetWidth
-    //         }
-
-    //         // console.log("Mouth X: ", mouthX.value, "Mouth Y: ", mouthY.value, "Scale: ", scale, "Lip Center X: ", LipCenterX, "Lip Center Y: ", LipCenterY, "Top Center: ", topCenterPoint, "Bottom Center: ", bottomCenterPoint, "offset X: ", offsetX)
-    //         // console.log("Frame Width: ", frameWidth.value, "Frame Height: ", frameHeight.value)
-
-    //         // LIP CONTOUR DRAWING
-
-    //         return allLipPoints.map(p => {
-    //             const scaledX = p.x * scale
-    //             const centeredX = scaledX - offsetX
-    //             const mirroredX = width - centeredX
-    //             const centeredY = p.y * scale - offsetY
-    //             return vec(p.x, p.y)
-    //         })
-    //     }
-    //         return []
-    // })
-
-    // Animated style for the face bounding box overlay (green border)
-    // const boundingBoxStyle = useAnimatedStyle(() => ({ // face box
-    //     position: 'absolute',
-    //     borderWidth: 4,
-    //     borderLeftColor: 'rgb(0,255,0)',
-    //     borderRightColor: 'rgb(0,255,0)',
-    //     borderBottomColor: 'rgb(0,255,0)',
-    //     borderTopColor: 'rgb(0,255,0)',
-    //     width: aFaceW.value,
-    //     height: aFaceH.value,
-    //     left: aFaceX.value,
-    //     top: aFaceY.value
-
-    //     // width: withTiming( aFaceW.value, {
-    //     //   duration: 100
-    //     // } ),
-    //     // height: withTiming( aFaceH.value, {
-    //     //   duration: 100
-    //     // } ),
-    //     // left: withTiming( aFaceX.value, {
-    //     //   duration: 100
-    //     // } ),
-    //     // top: withTiming( aFaceY.value, {
-    //     //   duration: 100
-    //     // } )
-    // }))
-
     // Animated style for the lip/mouth bounding box overlay (red border),
     // rotated by tiltAmount to track head tilt — this defines the LipNet crop region
     const lipBoxStyle = useAnimatedStyle(() => ({ // lip box
@@ -630,19 +517,6 @@ export default function FaceDetectionScreen(): ReactNode {
         height: mouthW.value,
         left: mouthX.value,
         top: mouthY.value,
-
-        // width: withTiming( mouthH.value, {
-        //   duration: 100
-        // } ),
-        // height: withTiming( mouthW.value, {
-        //   duration: 100
-        // } ),
-        // left: withTiming( mouthX.value, {
-        //   duration: 100
-        // } ),
-        // top: withTiming( mouthY.value, {
-        //   duration: 100
-        // } ),
         transform: [
             { rotateZ: `${tiltAmount.value}rad` }
         ]
