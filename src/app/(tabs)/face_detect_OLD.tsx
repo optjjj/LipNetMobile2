@@ -252,9 +252,9 @@ export default function FaceDetectionScreen(): ReactNode {
     // Pushes a cropped mouth frame into the buffer; transitions to inferencing once 75 frames are collected
     const saveFrameBuffer = (base64MouthData: string) => {
         console.log("saveFrameBuffer is being called")
-            const framelength = frameBuffer.current.push(base64MouthData)
-            console.log("Length of frameBuffer: ", framelength)
-            progressRef.current?.updateCount(frameBuffer.current.length)
+        const framelength = frameBuffer.current.push(base64MouthData)
+        console.log("Length of frameBuffer: ", framelength)
+        progressRef.current?.updateCount(frameBuffer.current.length)
         if (frameBuffer.current.length === 75) { // end recording phase
             console.log("75 Frames Captured")
             isCapturing.value = false
@@ -301,6 +301,25 @@ export default function FaceDetectionScreen(): ReactNode {
     const processFinished = useSharedValue(false)
 
     const lipPoints = useSharedValue<{ x: number; y: number }[]>([])
+
+    function diagnoseRawSequence(cpuData: Float32Array, T = 75, K = 28) {
+        const raw: number[] = [];
+        const counts = new Array(K).fill(0);
+
+        for (let t = 0; t < T; t++) {
+            const base = t * K;
+            let bestIdx = 0, bestVal = cpuData[base];
+            for (let k = 1; k < K; k++) {
+                if (cpuData[base + k] > bestVal) { bestVal = cpuData[base + k]; bestIdx = k; }
+            }
+            raw.push(bestIdx);
+            counts[bestIdx]++;
+        }
+
+        console.log('Raw argmax per frame:', raw.join(','));
+        console.log('First 5 frames:', raw.slice(0, 5), '  Last 5 frames:', raw.slice(-5));
+        console.log('Class frequencies:', counts.map((c, i) => `${i}:${c}`).filter(s => !s.endsWith(':0')).join(' '));
+    }
 
     // Buttons
 
@@ -366,6 +385,8 @@ export default function FaceDetectionScreen(): ReactNode {
             console.log("====================================");
             console.log("LIPNET TRANSLATION: ", translation.toUpperCase());
             console.log("====================================");
+
+            diagnoseRawSequence(rawOutputArray)
 
             processFinished.value = true;
 
@@ -464,7 +485,7 @@ export default function FaceDetectionScreen(): ReactNode {
                     const mouthXCrop = LipCenterX - (LipNetWidth / 2)
                     const mouthYCrop = LipCenterY - (LipNetHeight / 2)
 
-                    const clamp = (v:number, lo:number, hi:number) => Math.min(hi, Math.max(lo, v))
+                    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
                     // const thetha = tiltAmount.value * 100
 
@@ -474,8 +495,8 @@ export default function FaceDetectionScreen(): ReactNode {
                     // const left = clamp((cameraDimensions.width - mouthXrotated - offsetX - 70) / cameraDimensions.width * 100, 0, 100)
                     const top = clamp(((cameraDimensions.height - mouthYCrop - 60) / cameraDimensions.height) * 100, 0, 100)
 
-                    const leftRegion =  ((cameraDimensions.width - mouthXCrop - offsetX - 70) / cameraDimensions.width * 100)
-                    
+                    const leftRegion = ((cameraDimensions.width - mouthXCrop - offsetX - 70) / cameraDimensions.width * 100)
+
                     CropRegion.left = leftRegion
                     CropRegion.top = top
                     CropRegion.width = 17.7
@@ -658,7 +679,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                         setCameraDimensions({ width, height })
                                     }}
                                     device={cameraDevice}
-                                    
+
                                     exposure={3.0}
 
                                     orientationSource={'device'}
