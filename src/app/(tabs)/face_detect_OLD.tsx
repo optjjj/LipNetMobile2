@@ -396,8 +396,6 @@ export default function FaceDetectionScreen(): ReactNode {
 
             processFinished.value = true;
 
-            //console.log("AI Prediction Complete:", results);
-            processFinished.value = true
             handleSpeakingState()
 
         } catch (error) {
@@ -429,10 +427,14 @@ export default function FaceDetectionScreen(): ReactNode {
                 frameWidth.value = frame.width;
                 frameHeight.value = frame.height;
 
-                const CropRegion = ({ left: 50, top: 50, width: 17.7, height: 5 })
+                const CropRegion = ({ left: 50, top: 50, width: 17.7, height: 5 }) // PERCENTAGE OF TOTAL SCREEN SPACE
 
                 const contours = faces.value[0]?.contours
                 if (!contours) {
+                    mouthH.value = 0
+                    mouthW.value = 0
+                    mouthX.value = 0
+                    mouthY.value = 0
                     return []
                 }
 
@@ -458,7 +460,7 @@ export default function FaceDetectionScreen(): ReactNode {
                     const offsetX = (frameHeight.value * scale - cameraDimensions.width) / 2
                     const offsetY = (frameWidth.value * scale - cameraDimensions.height) / 2
                     //console.log("Camera Dimensions: ", cameraDimensions)
-                    console.log("Scale: ", scale, "offset X: ", offsetX, "offset Y: ", offsetY)
+                    //console.log("Scale: ", scale, "offset X: ", offsetX, "offset Y: ", offsetY)
 
                     //console.log("Window Height: ", windowHeight.value, "Window Width: ", windowWidth.value, "Frame Height: ", frameHeight.value, "Frame Width: ", frameWidth.value)
                     lipPoints.value = allLipPoints.map(point => ({
@@ -686,7 +688,7 @@ export default function FaceDetectionScreen(): ReactNode {
                                     }}
                                     device={cameraDevice}
 
-                                    exposure={3.0}
+
 
                                     orientationSource={'device'}
                                     onError={handleCameraMountError}
