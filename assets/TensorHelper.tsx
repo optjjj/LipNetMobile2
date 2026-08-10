@@ -8,7 +8,7 @@ const LIPNET_STD  = [0.1138, 0.1078, 0.0917]; // R, G, B
 
 export async function createPyTorchLipNetTensor(
   base64Frames: string[],
-  targetW = 128, // VERIFY against your ONNX input shape (Netron) before trusting this default
+  targetW = 128,
   targetH = 64
 ) {
   const framesCount = base64Frames.length;
@@ -42,13 +42,25 @@ export async function createPyTorchLipNetTensor(
         const i10 = (y1 * origW + x0) * 4;
         const i11 = (y1 * origW + x1) * 4;
 
-        for (let c = 0; c < 3; c++) {
-          const top = data[i00 + c] * (1 - wx) + data[i01 + c] * wx;
-          const bot = data[i10 + c] * (1 - wx) + data[i11 + c] * wx;
-          const pixel = (top * (1 - wy) + bot * wy) / 255.0;
-          const normalized = (pixel - LIPNET_MEAN[c]) / LIPNET_STD[c];
+// tensorC is the channel we are writing to the ONNX model (0=B, 1=G, 2=R)
+        for (let tensorC = 0; tensorC < 3; tensorC++) {
+          
+          // imageC is where we pull the data from jpeg-js (0=R, 1=G, 2=B)
+          // This simple math (2 - tensorC) does the swap:
+          // If tensorC is 0 (Blue), imageC becomes 2 (Blue).
+          // If tensorC is 2 (Red), imageC becomes 0 (Red).
+          const imageC = 2 - tensorC;
 
-          const tIndex = (c * channelStride) + (f * frameStride) + (y * heightStride) + x;
+          // Pull the exact color pixel using the swapped imageC
+          const top = data[i00 + imageC] * (1 - wx) + data[i01 + imageC] * wx;
+          const bot = data[i10 + imageC] * (1 - wx) + data[i11 + imageC] * wx;
+          const pixel = (top * (1 - wy) + bot * wy) / 255.0;
+          
+          // IMPORTANT: Apply the Mean/Std corresponding to that specific color
+          const normalized = (pixel - LIPNET_MEAN[imageC]) / LIPNET_STD[imageC];
+
+          // Save it to the tensor stride using tensorC
+          const tIndex = (tensorC * channelStride) + (f * frameStride) + (y * heightStride) + x;
           tensorData[tIndex] = normalized;
         }
       }
